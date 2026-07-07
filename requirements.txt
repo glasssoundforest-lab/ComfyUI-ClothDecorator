@@ -1,0 +1,12 @@
+# ClothDecorator — 依存ライブラリ
+# ComfyUI の Python 環境で実行:
+#   pip install -r requirements.txt
+
+numpy>=1.24
+Pillow>=10.0
+
+# torch は ComfyUI 本体が既に依存として同梱しているため追加インストール不要
+# （IMAGE/MASK テンソルの読み書きにのみ使用）
+
+# ── 開発用（pytest によるコアロジック単体テスト）────────────────────
+# pip install -r requirements.txt -r requirements-dev.txt
