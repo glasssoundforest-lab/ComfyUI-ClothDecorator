@@ -1,5 +1,43 @@
 # CHANGELOG
 
+## v0.7.1
+- **異常入力（負値・空データ・NaN/Inf・極端に大きい値）に対する堅牢性を
+  体系的に検証し、発見した複数のクラッシュ/ハングを修正**:
+  - `mask_utils.grow_mask`/`shrink_mask`: 巨大な px（例: 100000）で
+    OOM（プロセスキル）していた。PILの `MaxFilter`/`MinFilter` は
+    カーネルサイズに対して極端に遅く、512x512画像でも px=100 程度で
+    実質停止することが判明。maxの冪等性を利用し、3x3カーネルを px 回
+    反復適用する方式に変更（結果は数学的に同一・大幅に高速・pxに対して線形）。
+    あわせて上限値（300px）でクランプ
+  - `mask_utils.feather_mask`: `feather_px=NaN` で **セグメンテーション
+    フォルト**していた（PIL の GaussianBlur に NaN 半径を渡すと発生）。
+    NaN/Inf/負値を安全に0（無処理）へ丸めるよう修正
+  - `mask_utils.pad_bbox`: 大きな負のpadでbboxが反転（x0>x1）する
+    バグを修正。反転しないことを保証するガードを追加
+  - `paint_ops`: 範囲外RGB文字列（例: `"-10,-20,-30"`）で
+    `OverflowError`していたのを 0-255 にクランプするよう修正。
+    `hue_shift` の巨大な角度（1e15等）でも `OverflowError`していたのを
+    正規化して修正。`brightness_contrast`/`apply_within_mask`のNaN/Inf
+    引数によるundefined castも解消
+  - `color_analysis.kmeans_colors`: クラスタ数kが画素数に近い巨大値の場合
+    （例: `num_dominant_colors=1000000`）、距離行列の確保で**数十GB規模の
+    MemoryError**が発生していた。kとiters双方に上限（16 / 50）を設定
+  - `tag_mapping.map_tags_to_vocab`: 巨大なタグ列（10万件以上）で処理時間が
+    数十秒に爆発していた。タグ数に上限（300件）を設定し、非文字列要素も
+    安全に無視するよう修正
+  - `nodes/node_base.py`: IMAGE/MASKテンソルにNaN/Infが混入していると
+    uint8への未定義キャスト（RuntimeWarning）が発生していた。テンソル→
+    numpy変換の境界で `np.nan_to_num` により安全な値へ丸めるよう修正
+    （以降の全処理に波及しないようにする設計）
+  - `paste_back.py`: 不正な `bbox_json`（範囲外・反転・欠損キー）に対して
+    分かりにくい例外や不正な貼り戻しが起きていたのを、実画像サイズへの
+    クランプと分かりやすいエラーメッセージで改善
+  - 🔍 Image Analyzer の HTTP タガー応答: 1件でも不正な形式のタグ
+    （score が文字列/NaN等）が含まれると応答全体を破棄していたのを、
+    個々の不正エントリのみskipして有効なタグは活かすよう改善
+- 新規テストスイート `tests/test_robustness.py`（38件）で上記すべてを
+  回帰テストとしてカバー。単体テスト139 → **177件**（全通過）
+
 ## v0.7.0
 - **全語彙辞書を200件規模まで拡充**（decoration_preset・pattern・material・
   伝統色・subject_hint のすべてを対象）:

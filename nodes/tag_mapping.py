@@ -14,6 +14,9 @@ from __future__ import annotations
 
 from . import vocabulary
 
+# 処理するタグ数の上限（性能保護用）。詳細は map_tags_to_vocab のコメント参照。
+_MAX_TAGS = 300
+
 
 def _normalize(s: str) -> str:
     return s.lower().replace("_", " ").strip()
@@ -65,7 +68,11 @@ def map_tags_to_vocab(tags: list[str]) -> dict:
           "scores": {"decoration_preset": int, "pattern": int, "material": int},
         }
     """
-    tags_norm = [_normalize(t) for t in tags if t and t.strip()]
+    # 語彙側キー数 × タグ数 に比例して計算量が増えるため、極端に長いタグ列
+    # （誤動作したタガーサーバーからの応答等）による処理時間の爆発を防ぐ上限。
+    # 通常のタガーは数十件程度しか高信頼タグを返さないため、実用上問題にならない。
+    tags = list(tags)[:_MAX_TAGS]
+    tags_norm = [_normalize(t) for t in tags if isinstance(t, str) and t.strip()]
     dec_key, dec_score = _best_match(tags_norm, vocabulary.DECORATION_PRESETS)
     pat_key, pat_score = _best_match(tags_norm, vocabulary.PATTERN_VOCAB)
     mat_key, mat_score = _best_match(tags_norm, vocabulary.MATERIAL_VOCAB)

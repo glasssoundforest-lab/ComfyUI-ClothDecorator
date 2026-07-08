@@ -26,6 +26,7 @@ override 系）に直接ワイヤーできる。
 from __future__ import annotations
 
 import json
+import math
 import urllib.error
 import urllib.request
 from typing import Any
@@ -192,15 +193,22 @@ class ClothImageAnalyzerNode(ClothDecoratorNodeBase):
             body = json.loads(resp.read().decode("utf-8"))
 
         tags_field = body.get("tags", [])
+        if not isinstance(tags_field, list):
+            tags_field = []
+
         tags: list[str] = []
-        for t in tags_field:
-            if isinstance(t, dict):
-                score = float(t.get("score", 1.0))
-                if score < threshold:
-                    continue
-                tag_str = str(t.get("tag", "")).strip()
-            else:
-                tag_str = str(t).strip()
+        for t in tags_field[:500]:  # 応答が異常に長い場合の性能保護（実用上十分な上限）
+            try:
+                if isinstance(t, dict):
+                    score = float(t.get("score", 1.0))
+                    if not math.isfinite(score) or score < threshold:
+                        continue
+                    tag_str = str(t.get("tag", "")).strip()
+                else:
+                    tag_str = str(t).strip()
+            except (TypeError, ValueError):
+                # 個々のタグエントリが壊れていても、他の正常なタグは活かす
+                continue
             if tag_str:
                 tags.append(tag_str)
         return tags

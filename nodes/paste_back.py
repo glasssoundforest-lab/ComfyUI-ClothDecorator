@@ -61,10 +61,24 @@ class ClothPasteBackNode(ClothDecoratorNodeBase):
         orig_np = tensor_to_numpy_uint8(original_image)
         patch_np = tensor_to_numpy_uint8(patch_image)
 
-        info = json.loads(bbox_json)
-        bbox = (int(info["x0"]), int(info["y0"]), int(info["x1"]), int(info["y1"]))
+        try:
+            info = json.loads(bbox_json)
+            raw_bbox = (int(info["x0"]), int(info["y0"]), int(info["x1"]), int(info["y1"]))
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+            raise ValueError(
+                f"bbox_json が不正です（🖼️ Region Extract の bbox_json 出力を接続してください）: {e}"
+            ) from e
+
+        # bbox_json は別の画像に対して作られたものかもしれない（ノードの繋ぎ間違い等）ため、
+        # 実際に接続された original_image の寸法にクランプし、反転（x0>x1等）も補正する。
+        img_h, img_w = orig_np.shape[0], orig_np.shape[1]
+        bbox = mask_utils.pad_bbox(raw_bbox, 0, img_w, img_h)
 
         expected_h, expected_w = bbox[3] - bbox[1], bbox[2] - bbox[0]
+        if expected_h <= 0 or expected_w <= 0:
+            # クランプ後も有効な領域が残らない場合は貼り戻しをスキップし、元画像をそのまま返す
+            return (numpy_to_tensor(orig_np),)
+
         if patch_np.shape[0] != expected_h or patch_np.shape[1] != expected_w:
             from PIL import Image
 

@@ -41,6 +41,10 @@
   `output_language` で `prompt` / `merged_prompt` / `model_prompt` /
   `negative_prompt` を英語・日本語どちらで組み立てるか選べます
   （`free_text` / `base_prompt` はユーザーの生入力のため自動翻訳されません）。
+- **異常入力に対する堅牢性**: 負値・空データ・NaN/Inf・極端に大きい値
+  （巨大なpx指定やクラスタ数など）が渡されてもクラッシュ・ハング・
+  未定義動作が起きないよう、`tests/test_robustness.py` で継続的に検証
+  しています。詳細は CHANGELOG の v0.7.1 を参照。
 
 ## インストール
 

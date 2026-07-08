@@ -10,9 +10,30 @@ BASE_COLORS）の中から最も近い色を探す。単体テスト可能。
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 from . import vocabulary
+
+# k-means のクラスタ数・反復回数の上限。代表色抽出は本来少数（数個〜十数個）で
+# 十分な用途のため、上限を超える指定は「意味がない」として安全にクランプする。
+# これが無いと、例えば num_colors に極端に大きい値を渡された場合、
+# 距離行列 (N, k, 3) の N・k がどちらも大きくなり、数十GB規模のメモリ確保で
+# クラッシュしうる（k は事実上 N に近づくほど危険）。
+_MAX_K = 16
+_MAX_ITERS = 50
+
+
+def _sanitize_int(value: float, default: int, lo: int, hi: int) -> int:
+    """NaN/Inf/変換不能な値を default に丸め、[lo, hi] にクランプする。"""
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return default
+    if not math.isfinite(v):
+        return default
+    return max(lo, min(hi, int(round(v))))
 
 
 def extract_masked_pixels(
@@ -43,7 +64,8 @@ def kmeans_colors(
 
     data = pixels.astype("float64")
     n = data.shape[0]
-    k = max(1, min(k, n))
+    k = _sanitize_int(k, default=3, lo=1, hi=min(_MAX_K, n))
+    iters = _sanitize_int(iters, default=8, lo=1, hi=_MAX_ITERS)
 
     rng = np.random.default_rng(seed)
     # k-means++ 風の初期化（単純化: ランダムサンプルから重複無しで選ぶ）

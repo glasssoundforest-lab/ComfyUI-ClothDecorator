@@ -44,6 +44,9 @@ def tensor_to_numpy_uint8(image: Any) -> "Any":
     arr = np.asarray(arr)
     if arr.ndim == 4:
         arr = arr[0]
+    # 上流ノードから NaN/Inf が混入した場合でも uint8 キャスト時に未定義値に
+    # ならないよう、ここで安全な値に丸めておく（0=NaN, 1.0=+Inf, 0.0=-Inf）。
+    arr = np.nan_to_num(arr, nan=0.0, posinf=1.0, neginf=0.0)
     return np.clip(arr * 255.0, 0, 255).astype(np.uint8)
 
 
@@ -87,6 +90,8 @@ def mask_to_numpy(mask: Any) -> "Any":
     arr = np.asarray(arr, dtype="float32")
     if arr.ndim == 3:
         arr = arr[0]
+    # NaN/Inf が混入していても後続処理が未定義動作にならないよう安全な値に丸める。
+    arr = np.nan_to_num(arr, nan=0.0, posinf=1.0, neginf=0.0)
     return np.clip(arr, 0.0, 1.0)
 
 
