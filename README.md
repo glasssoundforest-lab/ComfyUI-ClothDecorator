@@ -88,15 +88,51 @@ Region Extract を挟まず、`LoadImage` の image と mask を直接
 [SAM/クリック選択] mask ┘
 ```
 
+## 日本語対応
+
+Stable Diffusion系モデルは英語プロンプトの方が精度が出やすいため、辞書の
+実体（プロンプトへ展開される語句）は英語のまま維持しつつ、以下の3方式で
+日本語入力に対応しています。
+
+1. **ドロップダウン表示のバイリンガル化**: `decoration_preset` / `pattern` /
+   `material` は ComfyUI 上で `"embroidery | 刺繍"` のように英語キーと
+   日本語ラベルを併記して表示されます。選択した値は自動的に正しい英語キー
+   に解決されます。
+2. **色の自由入力（日本の伝統色）**: `color` フィールドに `藍色` や
+   `ai-iro` のように日本の伝統色名（漢字・ローマ字どちらも可）を入力すると、
+   🧵 Prompt Composer では CLIPプロンプト向けの英語表現（例:
+   `deep indigo blue`）に、🎨 Direct Paint / 🧩 Auto では対応する
+   16進カラーコード（例: `#1e50a2`）に、それぞれ自動変換されます。
+   該当しない入力（`red` や `#ff0000` など）はそのまま渡されます。
+3. **対象語（subject_hint）の日本語入力**: `着物` `浴衣` `ドレス` `制服` など
+   服飾用語を直接入力すると英語（`kimono` / `yukata` / `dress` / `uniform`）
+   に変換されます。
+
+対応する日本の伝統色・和柄・和素材の例:
+
+| 種別 | 例 |
+|---|---|
+| 伝統色 | 藍色・茜色・山吹色・若草色・桜色・藤色・鴇色・群青色・朱色・抹茶色・紅色・黄金色・深緑・白銀・漆黒・浅葱色・紫紺・生成り |
+| 和柄（pattern） | 青海波・麻の葉・市松模様・唐草模様・桜柄・亀甲柄・七宝柄・雷紋 |
+| 和素材（material） | 和紙・ちりめん・金襴・西陣織・紬 |
+| 装飾技法の追加分 | 刺し子・藍染め・金継ぎ風ステッチ・折り紙モチーフ・家紋風エンブレム・バティック染め・手描きペイント・リボン刺繍・ラインストーン・フリル・チェーン装飾・フェザートリム 等 |
+
 ## decoration_preset（🧵 Prompt Composer / 🧩 Auto）
 
 `embroidery` / `lace_trim` / `sequins` / `beading` / `ribbon_bow` /
 `floral_applique` / `gradient_dye` / `tie_dye` / `patchwork` / `glitter` /
 `holographic` / `metallic_foil` / `fringe` / `tassel` / `pearl_trim` /
-`jewel_encrusted` / `studs` / `printed_pattern` / `custom`
+`jewel_encrusted` / `studs` / `printed_pattern` / `ribbon_embroidery` /
+`rhinestone` / `frill_ruffle` / `chain_trim` / `feather_trim` /
+`hand_painted` / `batik_dye` / `indigo_dye` / `sashiko_stitch` /
+`kintsugi_seam` / `origami_applique` / `kamon_emblem` / `bow_accent` /
+`corset_lacing` / `custom`
 
 語彙は `nodes/vocabulary.py` に定義されています。プロジェクト固有の
-装飾語を追加したい場合はこのファイルを編集してください。
+装飾語・色・柄・素材を追加したい場合はこのファイルの各辞書
+（`DECORATION_PRESETS` / `PATTERN_VOCAB` / `MATERIAL_VOCAB` /
+`TRADITIONAL_COLORS_JA` / `SUBJECT_HINT_JA_TO_EN`）と、対応する
+`*_LABELS_JA` を編集してください。
 
 ## decoration_type（🎨 Direct Paint / 🧩 Auto）
 

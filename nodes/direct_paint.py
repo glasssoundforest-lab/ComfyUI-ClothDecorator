@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import paint_ops
+from . import paint_ops, vocabulary
 from .node_base import (
     ClothDecoratorNodeBase,
     mask_to_numpy,
@@ -54,10 +54,19 @@ class ClothDirectPaintNode(ClothDecoratorNodeBase):
                     ],
                     {"default": "solid_color"},
                 ),
-                "color": ("STRING", {"default": "#c0392b", "tooltip": "'#rrggbb' または 'r,g,b'"}),
+                "color": (
+                    "STRING",
+                    {
+                        "default": "#c0392b",
+                        "tooltip": "'#rrggbb' / 'r,g,b' / 日本語伝統色（例: '藍色', 'ai-iro'）",
+                    },
+                ),
                 "color_b": (
                     "STRING",
-                    {"default": "#f1c40f", "tooltip": "gradient_fill の第2色"},
+                    {
+                        "default": "#f1c40f",
+                        "tooltip": "gradient_fill の第2色（同様に日本語伝統色も指定可）",
+                    },
                 ),
                 "angle": (
                     "FLOAT",
@@ -117,11 +126,13 @@ class ClothDirectPaintNode(ClothDecoratorNodeBase):
         img_np = tensor_to_numpy_uint8(image)
         mask_np = mask_to_numpy(mask)
         shape = img_np.shape[:2]
+        color_hex = vocabulary.resolve_color_to_hex(color)
+        color_b_hex = vocabulary.resolve_color_to_hex(color_b)
 
         if decoration_type == "solid_color":
-            effect = paint_ops.solid_color_fill(shape, color)
+            effect = paint_ops.solid_color_fill(shape, color_hex)
         elif decoration_type == "gradient_fill":
-            effect = paint_ops.gradient_fill(shape, color, color_b, angle)
+            effect = paint_ops.gradient_fill(shape, color_hex, color_b_hex, angle)
         elif decoration_type == "pattern_tile":
             if pattern_image is None:
                 raise ValueError("pattern_tile には pattern_image の接続が必要です")

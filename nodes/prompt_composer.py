@@ -37,14 +37,29 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
             "required": {
                 "mask": ("MASK", {"tooltip": "装飾対象の服領域マスク（SAM等から接続）"}),
                 "decoration_preset": (
-                    list(vocabulary.DECORATION_PRESETS.keys()),
-                    {"default": "embroidery"},
+                    vocabulary.bilingual_options(
+                        list(vocabulary.DECORATION_PRESETS.keys()), vocabulary.DECORATION_LABELS_JA
+                    ),
+                    {"default": vocabulary.bilingual_default("embroidery", vocabulary.DECORATION_LABELS_JA)},
                 ),
-                "pattern": (list(vocabulary.PATTERN_VOCAB.keys()), {"default": "none"}),
-                "material": (list(vocabulary.MATERIAL_VOCAB.keys()), {"default": "none"}),
+                "pattern": (
+                    vocabulary.bilingual_options(
+                        list(vocabulary.PATTERN_VOCAB.keys()), vocabulary.PATTERN_LABELS_JA
+                    ),
+                    {"default": vocabulary.bilingual_default("none", vocabulary.PATTERN_LABELS_JA)},
+                ),
+                "material": (
+                    vocabulary.bilingual_options(
+                        list(vocabulary.MATERIAL_VOCAB.keys()), vocabulary.MATERIAL_LABELS_JA
+                    ),
+                    {"default": vocabulary.bilingual_default("none", vocabulary.MATERIAL_LABELS_JA)},
+                ),
                 "subject_hint": (
                     "STRING",
-                    {"default": "clothing", "tooltip": "対象の呼称（dress, jacket 等に変更可）"},
+                    {
+                        "default": "clothing",
+                        "tooltip": "対象の呼称（dress, jacket 等。日本語も可: 'ドレス', '着物' など）",
+                    },
                 ),
                 "grow_px": (
                     "INT",
@@ -61,7 +76,13 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
                 ),
             },
             "optional": {
-                "color": ("STRING", {"default": "", "tooltip": "色（自由入力。例: 'red', '#ff0000'）"}),
+                "color": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "tooltip": "色（自由入力。例: 'red', '#ff0000', '藍色', 'ai-iro'）",
+                    },
+                ),
                 "free_text": (
                     "STRING",
                     {"multiline": True, "default": "", "tooltip": "追加の自由記述プロンプト"},
@@ -113,12 +134,12 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         if feather_px > 0:
             m = mask_utils.feather_mask(m, feather_px)
 
-        debug = result.to_dict()
+        debug = result.to_dict()  # "resolved" キーに解決済みの英語キーが入る
         debug["grow_px"] = grow_px
         debug["feather_px"] = feather_px
-        debug["decoration_preset"] = decoration_preset
-        debug["pattern"] = pattern
-        debug["material"] = material
+        debug["raw_decoration_preset"] = decoration_preset
+        debug["raw_pattern"] = pattern
+        debug["raw_material"] = material
 
         return (
             result.inpaint_prompt,

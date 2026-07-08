@@ -57,10 +57,23 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                     {"default": "solid_color", "tooltip": "mode=direct_paint のとき使用"},
                 ),
                 "decoration_preset": (
-                    list(vocabulary.DECORATION_PRESETS.keys()),
-                    {"default": "embroidery", "tooltip": "mode=generative_prompt のとき使用"},
+                    vocabulary.bilingual_options(
+                        list(vocabulary.DECORATION_PRESETS.keys()), vocabulary.DECORATION_LABELS_JA
+                    ),
+                    {
+                        "default": vocabulary.bilingual_default(
+                            "embroidery", vocabulary.DECORATION_LABELS_JA
+                        ),
+                        "tooltip": "mode=generative_prompt のとき使用",
+                    },
                 ),
-                "color": ("STRING", {"default": "#c0392b"}),
+                "color": (
+                    "STRING",
+                    {
+                        "default": "#c0392b",
+                        "tooltip": "'#rrggbb' / 'r,g,b' / 日本語伝統色（例: '藍色', 'ai-iro'）",
+                    },
+                ),
                 "opacity": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.05}),
                 "feather_px": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 100.0, "step": 0.5}),
             },
@@ -68,8 +81,18 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                 "color_b": ("STRING", {"default": "#f1c40f"}),
                 "pattern_image": ("IMAGE",),
                 "texture_image": ("IMAGE",),
-                "pattern": (list(vocabulary.PATTERN_VOCAB.keys()), {"default": "none"}),
-                "material": (list(vocabulary.MATERIAL_VOCAB.keys()), {"default": "none"}),
+                "pattern": (
+                    vocabulary.bilingual_options(
+                        list(vocabulary.PATTERN_VOCAB.keys()), vocabulary.PATTERN_LABELS_JA
+                    ),
+                    {"default": vocabulary.bilingual_default("none", vocabulary.PATTERN_LABELS_JA)},
+                ),
+                "material": (
+                    vocabulary.bilingual_options(
+                        list(vocabulary.MATERIAL_VOCAB.keys()), vocabulary.MATERIAL_LABELS_JA
+                    ),
+                    {"default": vocabulary.bilingual_default("none", vocabulary.MATERIAL_LABELS_JA)},
+                ),
                 "free_text": ("STRING", {"multiline": True, "default": ""}),
                 "subject_hint": ("STRING", {"default": "clothing"}),
                 "base_prompt": ("STRING", {"multiline": True, "default": "", "forceInput": True}),
@@ -102,11 +125,13 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         if mode == "direct_paint":
             img_np = tensor_to_numpy_uint8(image)
             shape = img_np.shape[:2]
+            color_hex = vocabulary.resolve_color_to_hex(color)
+            color_b_hex = vocabulary.resolve_color_to_hex(color_b)
 
             if decoration_type == "solid_color":
-                effect = paint_ops.solid_color_fill(shape, color)
+                effect = paint_ops.solid_color_fill(shape, color_hex)
             elif decoration_type == "gradient_fill":
-                effect = paint_ops.gradient_fill(shape, color, color_b, 0.0)
+                effect = paint_ops.gradient_fill(shape, color_hex, color_b_hex, 0.0)
             elif decoration_type == "pattern_tile":
                 if pattern_image is None:
                     raise ValueError("pattern_tile には pattern_image の接続が必要です")
