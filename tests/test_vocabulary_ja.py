@@ -147,3 +147,65 @@ def test_all_patterns_have_ja_labels():
 def test_all_materials_have_ja_labels():
     missing = set(vocabulary.MATERIAL_VOCAB) - set(vocabulary.MATERIAL_LABELS_JA)
     assert not missing
+
+
+# ── 第3/4弾拡充分のスポットチェック ─────────────────────────────────
+
+def test_world_textile_decoration_presets_present():
+    for key in [
+        "zari_embroidery",
+        "mirror_work",
+        "block_print",
+        "ikat_weave",
+        "kente_pattern",
+        "fair_isle_knit",
+        "damask_weave",
+        "toile_print",
+        "frog_buttons",
+        "laser_cut_pattern",
+    ]:
+        assert key in vocabulary.DECORATION_PRESETS
+        assert key in vocabulary.DECORATION_LABELS_JA
+
+
+def test_world_patterns_present():
+    for key in ["damask", "toile", "ikat", "kente", "fair_isle", "tartan", "arabesque_tile", "mandala"]:
+        assert key in vocabulary.PATTERN_VOCAB
+        assert key in vocabulary.PATTERN_LABELS_JA
+
+
+def test_new_wagara_present():
+    for key in ["hishi", "kumo"]:
+        assert key in vocabulary.PATTERN_VOCAB
+        assert key in vocabulary.PATTERN_LABELS_JA
+
+
+def test_western_materials_present():
+    for key in ["organza", "tulle", "brocade_western", "tweed", "corduroy", "faux_fur", "neoprene"]:
+        assert key in vocabulary.MATERIAL_VOCAB
+        assert key in vocabulary.MATERIAL_LABELS_JA
+
+
+def test_additional_traditional_colors_resolve():
+    assert vocabulary.resolve_color_term("江戸紫") == "edo purple"
+    assert vocabulary.resolve_color_term("kikyou-iro") == "bellflower purple-blue"
+    assert vocabulary.resolve_color_to_hex("銀鼠") == "#91989f"
+
+
+def test_additional_subject_hints_resolve():
+    assert vocabulary.resolve_subject_hint("花嫁衣装") == "wedding dress"
+    assert vocabulary.resolve_subject_hint("軍服") == "military uniform"
+    assert vocabulary.resolve_subject_hint("白衣") == "lab coat"
+
+
+def test_dictionary_sizes_grew_as_expected():
+    assert len(vocabulary.DECORATION_PRESETS) >= 70
+    assert len(vocabulary.PATTERN_VOCAB) >= 35
+    assert len(vocabulary.MATERIAL_VOCAB) >= 30
+    assert len(vocabulary.TRADITIONAL_COLORS_JA) >= 35
+    assert len(vocabulary.SUBJECT_HINT_JA_TO_EN) >= 35
+
+
+def test_no_duplicate_romaji_in_traditional_colors():
+    romaji_list = [e["romaji"] for e in vocabulary.TRADITIONAL_COLORS_JA.values()]
+    assert len(romaji_list) == len(set(romaji_list))

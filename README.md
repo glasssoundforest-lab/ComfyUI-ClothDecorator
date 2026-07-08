@@ -157,20 +157,33 @@ subject_hint=dress）:
 
 ## decoration_preset（🧵 Prompt Composer / 🧩 Auto）
 
-`embroidery` / `lace_trim` / `sequins` / `beading` / `ribbon_bow` /
-`floral_applique` / `gradient_dye` / `tie_dye` / `patchwork` / `glitter` /
-`holographic` / `metallic_foil` / `fringe` / `tassel` / `pearl_trim` /
-`jewel_encrusted` / `studs` / `printed_pattern` / `ribbon_embroidery` /
-`rhinestone` / `frill_ruffle` / `chain_trim` / `feather_trim` /
-`hand_painted` / `batik_dye` / `indigo_dye` / `sashiko_stitch` /
-`kintsugi_seam` / `origami_applique` / `kamon_emblem` / `bow_accent` /
-`corset_lacing` / `custom`
+72種類のプリセットを収録（`nodes/vocabulary.py` の `DECORATION_PRESETS`）。
+主なカテゴリ:
 
-語彙は `nodes/vocabulary.py` に定義されています。プロジェクト固有の
-装飾語・色・柄・素材を追加したい場合はこのファイルの各辞書
-（`DECORATION_PRESETS` / `PATTERN_VOCAB` / `MATERIAL_VOCAB` /
-`TRADITIONAL_COLORS_JA` / `SUBJECT_HINT_JA_TO_EN`）と、対応する
-`*_LABELS_JA` を編集してください。
+- 基本装飾: `embroidery` / `lace_trim` / `sequins` / `beading` / `ribbon_bow` /
+  `floral_applique` / `glitter` / `studs` / `printed_pattern` 等
+- 染め技法: `gradient_dye` / `tie_dye` / `batik_dye` / `indigo_dye` /
+  `shibori_dye` / `yuzen_dye` / `katazome_stencil`
+- 和装飾: `sashiko_stitch` / `kintsugi_seam` / `origami_applique` /
+  `kamon_emblem`
+- フォーマル系: `pocket_square` / `cufflinks_detail` / `brass_buttons` /
+  `epaulette_trim`
+- ゴシック/パンク系: `gothic_lace` / `cameo_brooch` / `bat_wing_applique` /
+  `safety_pin_accent`
+- ストリート系: `graffiti_print` / `distressed_denim` / `patch_badges` /
+  `mesh_panel` / `reflective_strip`
+- ブライダル: `bridal_veil_lace` / `pearl_trim`
+- 世界の染織技法: `zari_embroidery` / `mirror_work` / `block_print` /
+  `ikat_weave` / `kente_pattern` / `fair_isle_knit` / `damask_weave` /
+  `toile_print` / `frog_buttons`
+- モダン: `laser_cut_pattern` / `led_light_trim`
+- `custom`（free_text のみで構成）
+
+同様に pattern（36種）・material（31種）・伝統色（38種）・subject_hint
+（39種）も拡充されています。プロジェクト固有の装飾語・色・柄・素材を
+追加したい場合はこのファイルの各辞書（`DECORATION_PRESETS` /
+`PATTERN_VOCAB` / `MATERIAL_VOCAB` / `TRADITIONAL_COLORS_JA` /
+`SUBJECT_HINT_JA_TO_EN`）と、対応する `*_LABELS_JA` を編集してください。
 
 ## decoration_type（🎨 Direct Paint / 🧩 Auto）
 
