@@ -25,6 +25,7 @@ Stable Diffusion 系モデルは基本的に英語プロンプトの方が精度
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 # ═══════════════════════════════════════════════════════════════════
 # 装飾技法プリセット
@@ -279,6 +280,18 @@ def bilingual_default(key: str, labels_ja: dict[str, str]) -> str:
     return f"{key} | {ja}" if ja else key
 
 
+def _ensure_str(raw: Any) -> str:
+    """
+    文字列以外（int/list/dict等）が誤って渡された場合でも .strip() 等で
+    クラッシュしないよう、安全に文字列へ変換する。None・空値は "" にする。
+    """
+    if raw is None:
+        return ""
+    if isinstance(raw, str):
+        return raw
+    return str(raw)
+
+
 def resolve_key(raw: str, valid_keys: set[str] | dict, labels_ja: dict[str, str]) -> str:
     """
     "english_key"・"english_key | 日本語ラベル"・日本語ラベルそのもの の
@@ -287,9 +300,7 @@ def resolve_key(raw: str, valid_keys: set[str] | dict, labels_ja: dict[str, str]
     """
     if isinstance(valid_keys, dict):
         valid_keys = set(valid_keys.keys())
-    if raw is None:
-        return "none" if "none" in valid_keys else ""
-    raw = raw.strip()
+    raw = _ensure_str(raw).strip()
     if not raw:
         return "none" if "none" in valid_keys else raw
     if raw in valid_keys:
@@ -306,9 +317,9 @@ def resolve_key(raw: str, valid_keys: set[str] | dict, labels_ja: dict[str, str]
 
 def _match_traditional_color(raw: str) -> tuple[str, dict[str, str]] | None:
     """入力文字列を日本の伝統色辞書（漢字名 or ローマ字）から検索する。(漢字キー, エントリ) を返す。"""
-    if not raw or not raw.strip():
+    raw_stripped = _ensure_str(raw).strip()
+    if not raw_stripped:
         return None
-    raw_stripped = raw.strip()
     if raw_stripped in TRADITIONAL_COLORS_JA:
         return raw_stripped, TRADITIONAL_COLORS_JA[raw_stripped]
     lower = raw_stripped.lower()
@@ -324,10 +335,11 @@ def resolve_color_term(raw: str) -> str:
     日本の伝統色名（漢字/ローマ字）に一致すればその英語表現を返し、
     一致しなければ入力をそのまま返す（"red" や "#ff0000" 等はそのまま通す）。
     """
-    if not raw or not raw.strip():
+    raw = _ensure_str(raw).strip()
+    if not raw:
         return ""
     match = _match_traditional_color(raw)
-    return match[1]["en"] if match else raw.strip()
+    return match[1]["en"] if match else raw
 
 
 def resolve_color_to_hex(raw: str) -> str:
@@ -336,7 +348,8 @@ def resolve_color_to_hex(raw: str) -> str:
     日本の伝統色名に一致すればその hex を返し、一致しなければ入力を
     そのまま返す（'#rrggbb' や 'r,g,b' 形式はそのまま paint_ops 側で解釈される）。
     """
-    if not raw or not raw.strip():
+    raw = _ensure_str(raw)
+    if not raw.strip():
         return raw
     match = _match_traditional_color(raw)
     return match[1]["hex"] if match else raw
@@ -349,9 +362,9 @@ def resolve_color_bilingual(raw: str) -> tuple[str, str]:
     対応する日本語訳を、どちらにも一致しなければ入力をそのまま両方に使う
     （翻訳できない自由記述はベストエフォートで素通しする）。
     """
-    if not raw or not raw.strip():
+    raw_stripped = _ensure_str(raw).strip()
+    if not raw_stripped:
         return "", ""
-    raw_stripped = raw.strip()
     match = _match_traditional_color(raw_stripped)
     if match:
         kanji, entry = match
@@ -364,9 +377,9 @@ def resolve_color_bilingual(raw: str) -> tuple[str, str]:
 
 def resolve_subject_hint(raw: str) -> str:
     """対象語（subject_hint）の日本語表記を英語のプロンプト語へ変換する。"""
-    if not raw or not raw.strip():
+    raw = _ensure_str(raw).strip()
+    if not raw:
         return "clothing"
-    raw = raw.strip()
     return SUBJECT_HINT_JA_TO_EN.get(raw, raw)
 
 
@@ -376,9 +389,9 @@ def resolve_subject_bilingual(raw: str) -> tuple[str, str]:
     日本語入力ならその英訳を、英語入力なら SUBJECT_HINT_EN_TO_JA から日本語訳を探す。
     どちらの辞書にも無い場合は入力をそのまま両方に使う。
     """
-    if not raw or not raw.strip():
+    raw = _ensure_str(raw).strip()
+    if not raw:
         return "clothing", "服"
-    raw = raw.strip()
     if raw in SUBJECT_HINT_JA_TO_EN:
         return SUBJECT_HINT_JA_TO_EN[raw], raw
     ja = SUBJECT_HINT_EN_TO_JA.get(raw.lower())
@@ -433,6 +446,9 @@ def build_decoration_prompt(
         DecorationPromptResult
     """
     lang = output_language if output_language in ("en", "ja") else "en"
+    free_text = _ensure_str(free_text)
+    negative_extra = _ensure_str(negative_extra)
+    base_prompt = _ensure_str(base_prompt)
 
     preset_key = resolve_key(decoration_preset, DECORATION_PRESETS, DECORATION_LABELS_JA)
     pattern_key = resolve_key(pattern, PATTERN_VOCAB, PATTERN_LABELS_JA)

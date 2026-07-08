@@ -260,3 +260,73 @@ def test_paste_back_inverted_bbox_is_handled_gracefully():
     bbox_json = _json.dumps({"x0": 20, "y0": 20, "x1": 5, "y1": 5, "orig_w": 32, "orig_h": 32})
     (result,) = node.paste(orig, patch, bbox_json, feather_px=2.0)
     assert result.shape == orig.shape
+
+
+# ── 画像でないもの・テキストでないデータの入力 ─────────────────────────
+
+from nodes.node_base import tensor_to_numpy_uint8 as _t2n  # noqa: E402
+
+
+def test_grayscale_image_is_expanded_to_rgb():
+    img = torch.rand(1, 16, 16, 1)
+    arr = _t2n(img)
+    assert arr.shape == (16, 16, 3)
+
+
+def test_rgba_image_drops_alpha_channel():
+    img = torch.rand(1, 16, 16, 4)
+    arr = _t2n(img)
+    assert arr.shape == (16, 16, 3)
+
+
+def test_2d_image_without_channel_axis_is_handled():
+    img = torch.rand(16, 16)
+    arr = _t2n(img)
+    assert arr.shape == (16, 16, 3)
+
+
+def test_unsupported_channel_count_raises_clear_error():
+    img = torch.rand(1, 16, 16, 5)
+    with pytest.raises(ValueError, match="チャンネル数"):
+        _t2n(img)
+
+
+def test_none_image_raises_clear_error_not_cryptic_one():
+    from nodes.node_base import mask_to_numpy
+
+    with pytest.raises(ValueError, match="None"):
+        _t2n(None)
+    with pytest.raises(ValueError, match="None"):
+        mask_to_numpy(None)
+
+
+def test_non_array_image_raises_clear_error():
+    for bad in ["not an image", 42, {"foo": "bar"}]:
+        with pytest.raises(ValueError):
+            _t2n(bad)
+
+
+def test_direct_paint_node_with_non_string_color_does_not_crash():
+    node = NODE_CLASS_MAPPINGS["ClothDirectPaint"]()
+    img = torch.rand(1, 16, 16, 3)
+    mask = torch.ones(1, 16, 16)
+    for bad_color in [12345, None]:
+        with pytest.raises(ValueError):
+            node.paint(
+                img, mask, decoration_type="solid_color", color=bad_color, color_b="#00ff00",
+                angle=0.0, opacity=1.0, blend_mode="normal", feather_px=4.0,
+                brightness=0.0, contrast=0.0, hue_degrees=0.0,
+            )
+
+
+def test_build_decoration_prompt_non_string_fields_do_not_crash():
+    result = vocabulary.build_decoration_prompt(
+        free_text=12345, color=["not", "a", "string"], subject_hint={"a": 1}, base_prompt=999
+    )
+    assert isinstance(result.decoration_prompt, str)
+
+
+def test_resolve_key_non_string_does_not_crash():
+    assert isinstance(
+        vocabulary.resolve_key(999, vocabulary.DECORATION_PRESETS, vocabulary.DECORATION_LABELS_JA), str
+    )

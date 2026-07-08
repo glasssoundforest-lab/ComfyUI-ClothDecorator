@@ -142,6 +142,11 @@ def hue_shift(image: np.ndarray, degrees: float) -> np.ndarray:
 
 
 def _parse_color(color: str) -> tuple[int, int, int]:
+    if not isinstance(color, str):
+        raise ValueError(
+            f"color は文字列である必要があります（{type(color).__name__} が渡されています）。"
+            "'#rrggbb' または 'r,g,b' 形式の文字列を指定してください。"
+        )
     color = color.strip()
     if color.startswith("#") or (len(color) in (3, 6) and all(c in "0123456789abcdefABCDEF" for c in color)):
         return _hex_to_rgb(color)

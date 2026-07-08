@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## v0.7.2
+- **画像でないもの・テキストでないデータが入力された場合の堅牢性を強化**:
+  - **グレースケール(1ch)・RGBA(4ch)・チャンネル軸なしの2D画像を自動でRGBに
+    正規化**するようにした（従来は shape mismatch で例外になっていた）。
+    グレースケールは3chへ複製、RGBAはアルファを破棄。1/3/4以外の
+    チャンネル数は「画像ではないデータの可能性」と明示するエラーに変更
+  - `image`/`mask` に `None` が渡された場合、以前は
+    `TypeError`/`IndexError`等の分かりにくい内部例外だったのを、
+    「IMAGE/MASK型の入力が接続されているか確認してください」という
+    明確なエラーメッセージに変更
+  - `image`/`mask` に文字列・数値・dict等の完全に無関係なデータが
+    渡された場合も同様に明確なエラーに変更（`nodes/node_base.py`）
+  - `color`/`free_text`/`subject_hint`/`base_prompt` 等のSTRING系
+    フィールドに数値・None・リスト等が渡されても
+    `AttributeError: 'int' object has no attribute 'strip'` のような
+    内部エラーで落ちず、安全な文字列変換またはベストエフォートでの
+    処理継続、あるいは明確なエラーメッセージのいずれかになるよう
+    `nodes/vocabulary.py`・`nodes/paint_ops.py` に型安全化を追加
+- 新規テスト9件を `tests/test_robustness.py` に追加（全通過）。
+  単体テスト177 → **186件**
+
 ## v0.7.1
 - **異常入力（負値・空データ・NaN/Inf・極端に大きい値）に対する堅牢性を
   体系的に検証し、発見した複数のクラッシュ/ハングを修正**:
