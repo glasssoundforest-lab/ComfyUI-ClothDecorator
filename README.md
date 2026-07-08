@@ -141,6 +141,12 @@ Region Extract を挟まず、`LoadImage` の image と mask を直接
   Response body: {"tags": [{"tag": "lace_trim", "score": 0.87}, ...]}
   ```
 
+  サーバーの立て方・運用方法の詳細（依存ライブラリ不要のモックサーバー、
+  WD14 Taggerを使った本番向け実装例、セキュリティ・トラブルシューティング等）は
+  **[docs/TAGGER_SERVER.md](docs/TAGGER_SERVER.md)** を参照してください。
+  すぐ試せる実装例は `examples/mock_tagger_server.py`（依存追加無し）と
+  `examples/wd14_tagger_server.py`（本番向け）にあります。
+
 `suggested_*` の出力は STRING のため、🧵 Prompt Composer / 🧩 Auto の
 `decoration_preset_override` / `pattern_override` / `material_override`
 （STRING、指定時はドロップダウン選択より優先）や `color`（STRING）に

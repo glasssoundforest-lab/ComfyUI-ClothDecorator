@@ -1,0 +1,13 @@
+# examples/wd14_tagger_server.py の実行に必要な依存関係
+# ClothDecorator 本体の requirements.txt とは別。
+#   pip install -r examples/requirements-tagger.txt
+#
+# examples/mock_tagger_server.py は Pillow のみで動作するため
+# このファイルは不要（ClothDecorator本体の依存で足りる）。
+
+fastapi>=0.100
+uvicorn[standard]>=0.20
+pydantic>=2.0
+onnxruntime>=1.16
+numpy>=1.24
+Pillow>=10.0
