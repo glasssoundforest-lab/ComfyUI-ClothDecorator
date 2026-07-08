@@ -104,6 +104,16 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                         ),
                     },
                 ),
+                "group_by_category": (
+                    "BOOLEAN",
+                    {
+                        "default": False,
+                        "tooltip": (
+                            "mode=generative_prompt のとき、ON にすると集めたタグを"
+                            "色→装飾技法→柄→素材→その他の順でカテゴリごとのブロックにまとめる。"
+                        ),
+                    },
+                ),
             },
             "optional": {
                 "color_b": ("STRING", {"default": "#f1c40f"}),
@@ -153,6 +163,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         feather_px: float,
         output_language: str = "en",
         confirm_continue: bool = False,
+        group_by_category: bool = False,
         color_b: str = "#f1c40f",
         pattern_image: Any = None,
         texture_image: Any = None,
@@ -240,6 +251,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
             subject_hint=subject_hint,
             base_prompt=base_prompt,
             output_language=output_language,
+            group_by_category=group_by_category,
         )
 
         model_key = target_model.split(" | ", 1)[0].strip()
@@ -264,6 +276,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
             {"category": c.category, "values": c.values, "message": c.message} for c in conflicts
         ]
         debug["confirm_continue"] = confirm_continue
+        debug["group_by_category"] = group_by_category
         return (
             image,
             result.inpaint_prompt,

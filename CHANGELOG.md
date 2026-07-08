@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v0.9.0
+- **カテゴリ別ブロック整形機能を新設（`group_by_category`）**: 同じ
+  カテゴリ（色・装飾技法・柄・素材）に属するタグが `free_text` 等に
+  順不同・混在で書かれていても、出力プロンプトでは同じカテゴリのタグが
+  隣接するブロックにまとまるよう整形できるようにした:
+  - 新規関数 `vocabulary.categorize_term()`（1タグが色/装飾技法/柄/素材/
+    その他のどれに該当するかを、既存の語彙辞書と照合して判定）
+  - 新規関数 `vocabulary.group_terms_by_category()`（色→装飾技法→柄→
+    素材→その他 の順でタグを並べ替える。各カテゴリ内の相対順序は維持）
+  - `build_decoration_prompt(group_by_category=True)` で
+    `decoration_prompt`/`inpaint_prompt`/`merged_prompt` に適用
+    （既定は `False`、従来通りの入力順を維持して後方互換）
+  - 🧵 Prompt Composer / 🧩 Auto（`generative_prompt`モード）に
+    `group_by_category` トグルを追加
+- 新規回帰テスト5件を追加。単体テスト217 → **222件**（全通過）
+
 ## v0.8.0
 - **タグの衝突検出＋確認ゲート機能を新設**: `color` / `free_text` /
   `subject_hint` の間で、同じカテゴリ（色・対象の服/部位）に属する

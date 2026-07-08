@@ -146,3 +146,56 @@ def test_free_text_single_phrase_without_comma_is_unaffected():
     """カンマを含まない一続きのフレーズは、これまで通り1つの語として扱われる。"""
     result = vocabulary.build_decoration_prompt(decoration_preset="none", free_text="a delicate hand-stitched look")
     assert result.decoration_prompt == "a delicate hand-stitched look"
+
+
+# ── カテゴリ別ブロック整形（group_by_category） ─────────────────────────
+
+def test_categorize_term_basic():
+    assert vocabulary.categorize_term("red") == "color"
+    assert vocabulary.categorize_term("intricate embroidery") == "decoration"
+    assert vocabulary.categorize_term("floral pattern") == "pattern"
+    assert vocabulary.categorize_term("silk fabric") == "material"
+    assert vocabulary.categorize_term("sparkly") == "other"
+
+
+def test_group_terms_by_category_reorders_into_blocks():
+    terms = ["blue", "lace trim", "red", "floral pattern", "silk fabric", "gold", "sparkly"]
+    grouped = vocabulary.group_terms_by_category(terms)
+    categories = [vocabulary.categorize_term(t) for t in grouped]
+    # 一度出現したカテゴリの後に別カテゴリへ戻ることが無い＝ブロック化されている
+    seen = []
+    for c in categories:
+        if not seen or seen[-1] != c:
+            seen.append(c)
+    assert len(seen) == len(set(categories))
+
+
+def test_group_terms_by_category_preserves_intra_category_order():
+    terms = ["blue", "red", "gold"]
+    grouped = vocabulary.group_terms_by_category(terms)
+    assert grouped == ["blue", "red", "gold"]  # 色カテゴリのみなので入力順のまま
+
+
+def test_build_decoration_prompt_group_by_category_true():
+    result = vocabulary.build_decoration_prompt(
+        decoration_preset="embroidery",
+        color="red",
+        free_text="blue, lace trim, floral pattern, gold, silk fabric, sparkly",
+        group_by_category=True,
+    )
+    terms = result.decoration_prompt.split(", ")
+    color_positions = [i for i, t in enumerate(terms) if vocabulary.categorize_term(t) == "color"]
+    # 色タグ（red, blue, gold）が連続したブロックになっている
+    assert color_positions == list(range(color_positions[0], color_positions[0] + len(color_positions)))
+    assert set(terms[: len(color_positions)]) == {"red", "blue", "gold"}
+
+
+def test_build_decoration_prompt_group_by_category_false_preserves_order():
+    result = vocabulary.build_decoration_prompt(
+        decoration_preset="embroidery",
+        color="red",
+        free_text="blue, lace trim, floral pattern, gold, silk fabric, sparkly",
+        group_by_category=False,
+    )
+    # 既定では従来通り入力順（colorが先頭、以降はpreset→free_textの出現順）
+    assert result.decoration_prompt.startswith("red, intricate embroidery, embroidered pattern, blue")

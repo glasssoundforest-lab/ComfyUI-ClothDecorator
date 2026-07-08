@@ -66,6 +66,19 @@
   `confirm_continue` を ON にして再実行すると、そのまま両方のタグを
   含めて続行します。競合の有無・詳細は `conflict_warning` 出力と
   `debug_json` でも確認できます。
+- **カテゴリ別ブロック整形（`group_by_category`）**: 🧵 Prompt Composer /
+  🧩 Auto で `group_by_category` を ON にすると、`color` /
+  `decoration_preset` / `pattern` / `material` / `free_text` から
+  集めたタグを、**色→装飾技法→柄→素材→その他 の順でカテゴリごとの
+  ブロックにまとめて**並べ替えます（各カテゴリ内の相対順序は保持）。
+  `free_text` に色・装飾・柄などのタグが順不同・混在で書かれていても、
+  出力プロンプトでは同じカテゴリのタグが隣接するように整形されます。
+  既定は OFF（従来通り、入力順を保ったまま出力）。
+  ```
+  free_text = "blue, lace trim, floral pattern, gold, silk fabric, sparkly"（color="red"）
+  group_by_category=False → "red, ..., blue, lace trim, floral pattern, gold, silk fabric, sparkly"（混在）
+  group_by_category=True  → "red, blue, gold, ..., lace trim, floral pattern, silk fabric, sparkly"（色→装飾→柄→素材の順にブロック化）
+  ```
 
 ## インストール
 

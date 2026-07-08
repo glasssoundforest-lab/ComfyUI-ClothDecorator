@@ -123,6 +123,17 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
                         ),
                     },
                 ),
+                "group_by_category": (
+                    "BOOLEAN",
+                    {
+                        "default": False,
+                        "tooltip": (
+                            "ON にすると、color/decoration_preset/pattern/material/free_text から"
+                            "集めたタグを、色→装飾技法→柄→素材→その他の順でカテゴリごとに"
+                            "ブロックにまとめて並べ替える（各カテゴリ内の相対順序は保つ）。"
+                        ),
+                    },
+                ),
             },
             "optional": {
                 "color": (
@@ -191,6 +202,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         grow_px: int,
         feather_px: float,
         confirm_continue: bool = False,
+        group_by_category: bool = False,
         color: str = "",
         free_text: str = "",
         base_prompt: str = "",
@@ -236,6 +248,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
             base_prompt=base_prompt,
             negative_extra=negative_extra,
             output_language=output_language,
+            group_by_category=group_by_category,
         )
 
         model_key = target_model.split(" | ", 1)[0].strip()
@@ -270,6 +283,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
             {"category": c.category, "values": c.values, "message": c.message} for c in conflicts
         ]
         debug["confirm_continue"] = confirm_continue
+        debug["group_by_category"] = group_by_category
 
         return (
             result.inpaint_prompt,

@@ -520,6 +520,64 @@ def format_conflict_message(conflicts: list[TagConflict]) -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════
+# カテゴリ別ブロック整形
+# ═══════════════════════════════════════════════════════════════════
+# free_text 等にカテゴリの異なるタグ（色・装飾技法・柄・素材）が順不同で
+# 混在していても、出力プロンプトでは同じカテゴリ同士が隣接するように
+# 並べ替える（各カテゴリ内の相対順序は保つ）。
+
+_CATEGORY_ORDER = ["color", "decoration", "pattern", "material", "other"]
+
+
+def _term_matches_any_phrase(term_lower: str, phrases: list[str]) -> bool:
+    for p in phrases:
+        if not p:
+            continue
+        p_lower = p.lower()
+        if p_lower == term_lower or p_lower in term_lower or term_lower in p_lower:
+            return True
+    return False
+
+
+def categorize_term(term: str) -> str:
+    """
+    1つの語句が color/decoration/pattern/material のどの語彙カテゴリに
+    一致するかを判定する。どれにも一致しなければ "other"。
+    """
+    term = _ensure_str(term).strip()
+    if not term:
+        return "other"
+    term_lower = term.lower()
+
+    if _find_color_matches(term):
+        return "color"
+
+    for phrases in DECORATION_PRESETS.values():
+        if _term_matches_any_phrase(term_lower, phrases):
+            return "decoration"
+
+    if _term_matches_any_phrase(term_lower, list(PATTERN_VOCAB.values())):
+        return "pattern"
+
+    if _term_matches_any_phrase(term_lower, list(MATERIAL_VOCAB.values())):
+        return "material"
+
+    return "other"
+
+
+def group_terms_by_category(terms: list[str]) -> list[str]:
+    """
+    テーマの異なるタグが混在したリストを、同じカテゴリ（色→装飾技法→柄→
+    素材→その他）ごとのブロックにまとめて並べ替える。各カテゴリ内での
+    相対順序（入力順）は保持する。
+    """
+    buckets: dict[str, list[str]] = {c: [] for c in _CATEGORY_ORDER}
+    for t in terms:
+        buckets[categorize_term(t)].append(t)
+    return [t for c in _CATEGORY_ORDER for t in buckets[c]]
+
+
+# ═══════════════════════════════════════════════════════════════════
 # メイン関数
 # ═══════════════════════════════════════════════════════════════════
 
@@ -533,6 +591,7 @@ def build_decoration_prompt(
     base_prompt: str = "",
     negative_extra: str = "",
     output_language: str = "en",
+    group_by_category: bool = False,
 ) -> DecorationPromptResult:
     """
     プリセット選択＋自由入力から、装飾用プロンプト一式を組み立てる。
@@ -549,6 +608,13 @@ def build_decoration_prompt(
     free_text / base_prompt はユーザーの生入力のため自動翻訳はされず、
     そのまま両言語で使われる点に注意。
 
+    group_by_category=True を指定すると、color/decoration_preset/pattern/
+    material/free_text から集められたタグを、色→装飾技法→柄→素材→その他
+    の順でカテゴリごとのブロックにまとめて並べ替える（各カテゴリ内の
+    相対順序は保つ）。free_text 等に異なるカテゴリのタグが順不同・混在で
+    書かれていても、同じカテゴリのタグが隣接するように整形される。
+    既定は False（従来通り、入力順を保ったまま）。
+
     Args:
         decoration_preset: DECORATION_PRESETS のキー（日本語ラベルも可）
         pattern:            PATTERN_VOCAB のキー（日本語ラベルも可）
@@ -560,6 +626,7 @@ def build_decoration_prompt(
                                 merged_prompt を生成する（翻訳されない）
         negative_extra:          追加のネガティブプロンプト（カンマ区切り、翻訳されない）
         output_language:          "en"（既定）または "ja"
+        group_by_category:        True で同じカテゴリのタグをブロックにまとめる
 
     Returns:
         DecorationPromptResult
@@ -615,6 +682,8 @@ def build_decoration_prompt(
         terms.extend(t.strip() for t in free_text.split(",") if t.strip())
 
     terms = _dedupe_list(terms)
+    if group_by_category:
+        terms = group_terms_by_category(terms)
     decoration_prompt = _dedupe_join(terms)
 
     # inpaint_prompt: 対象語＋装飾語（インペイント系ノードにそのまま渡す想定）
