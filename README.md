@@ -79,6 +79,16 @@
   group_by_category=False → "red, ..., blue, lace trim, floral pattern, gold, silk fabric, sparkly"（混在）
   group_by_category=True  → "red, blue, gold, ..., lace trim, floral pattern, silk fabric, sparkly"（色→装飾→柄→素材の順にブロック化）
   ```
+  **注意（誤検出防止の仕様）**: カテゴリ判定・衝突検出は「タグ全体が丸ごと
+  語彙上の色名/対象語と一致する」場合のみ働きます。`free_text` に
+  `"yellow embroidery"` や `"red and blue striped skirt"` のように、
+  色の単語が長い説明フレーズの一部として含まれているだけの場合は
+  （それ自体が単独の色タグではないため）色カテゴリには分類されず、
+  衝突検出の対象にもなりません。これは「黄色の刺繍」「赤と青のストライプ
+  柄」のような正当な複合表現を、誤って色の競合と判定してしまうのを
+  防ぐための意図的な仕様です。個々のタグとして明確に区切って書いた
+  場合（例: `free_text = "red, blue"`）のみ、カテゴリ分類・衝突検出の
+  対象になります。
 
 ## インストール
 

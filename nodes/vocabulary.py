@@ -24,7 +24,6 @@ Stable Diffusion 系モデルは基本的に英語プロンプトの方が精度
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -425,37 +424,59 @@ class TagConflict:
     message: str
 
 
-def _find_color_matches(text: str) -> set[str]:
-    """テキスト中に含まれる語彙上の色名（BASE_COLORS + 日本の伝統色）を検出する。"""
+def _split_into_tags(text: str) -> list[str]:
+    """カンマ区切りのタグ列を個々のタグへ分割する（build_decoration_promptのfree_text分割と同じ規則）。"""
     text = _ensure_str(text)
     if not text.strip():
-        return set()
-    text_lower = text.lower()
+        return []
+    return [t.strip() for t in text.split(",") if t.strip()]
+
+
+def _find_color_matches(tags_or_text: str | list[str]) -> set[str]:
+    """
+    カンマ区切りタグ（またはテキスト。内部でカンマ分割される）の中から、
+    「タグ全体が丸ごと語彙上の色名と一致する」ものだけを検出する。
+
+    "red" のような単独タグは検出するが、"red and blue striped skirt" のように
+    色の単語が長い説明文の一部として含まれているだけの場合は検出しない
+    （そうしないと、模様の説明などを誤って「色の競合」と判定してしまうため）。
+    """
+    tags = tags_or_text if isinstance(tags_or_text, list) else _split_into_tags(tags_or_text)
     found: set[str] = set()
-    for name in BASE_COLORS:
-        if name in ("custom", "pastel"):
+    for tag in tags:
+        tag_norm = _normalize_whitespace(tag).lower()
+        if not tag_norm:
             continue
-        if re.search(rf"\b{re.escape(name)}\b", text_lower):
-            found.add(name)
-    for kanji in TRADITIONAL_COLORS_JA:
-        if kanji in text:
-            found.add(kanji)
+        for name in BASE_COLORS:
+            if name in ("custom", "pastel"):
+                continue
+            if tag_norm == name:
+                found.add(name)
+        for kanji, entry in TRADITIONAL_COLORS_JA.items():
+            if _normalize_whitespace(tag) == kanji or tag_norm == entry["romaji"].lower():
+                found.add(kanji)
     return found
 
 
-def _find_subject_matches(text: str) -> set[str]:
-    """テキスト中に含まれる語彙上の服飾対象語（英語表現に正規化して）を検出する。"""
-    text = _ensure_str(text)
-    if not text.strip():
-        return set()
-    text_lower = text.lower()
+def _find_subject_matches(tags_or_text: str | list[str]) -> set[str]:
+    """
+    カンマ区切りタグ（またはテキスト）の中から、「タグ全体が丸ごと語彙上の
+    服飾対象語と一致する」ものだけを英語表現に正規化して検出する。
+    color と同様、長い説明文中の一単語として偶然含まれるだけのケースは対象外。
+    """
+    tags = tags_or_text if isinstance(tags_or_text, list) else _split_into_tags(tags_or_text)
     found: set[str] = set()
-    for ja, en in SUBJECT_HINT_JA_TO_EN.items():
-        if ja in text:
-            found.add(en)
-    for en in set(SUBJECT_HINT_JA_TO_EN.values()):
-        if re.search(rf"\b{re.escape(en.lower())}\b", text_lower):
-            found.add(en)
+    for tag in tags:
+        tag_stripped = _normalize_whitespace(tag)
+        tag_norm = tag_stripped.lower()
+        if not tag_norm:
+            continue
+        if tag_stripped in SUBJECT_HINT_JA_TO_EN:
+            found.add(SUBJECT_HINT_JA_TO_EN[tag_stripped])
+            continue
+        for en in set(SUBJECT_HINT_JA_TO_EN.values()):
+            if tag_norm == en.lower():
+                found.add(en)
     return found
 
 
