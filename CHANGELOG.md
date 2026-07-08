@@ -1,0 +1,34 @@
+# CHANGELOG
+
+## v0.3.0
+- 語彙辞書をさらに拡充:
+  - decoration_preset: 32 → 48（クリスタルビーズ・レースオーバーレイ・
+    ベルベットトリム・キルティング・絞り染め・友禅染め・型染め 等）
+  - pattern: 18 → 26（鱗文様・立涌・紗綾形・籠目・松皮菱・矢絣 等の和柄を追加）
+  - material: 15 → 23（麻・苧麻・錦・羽二重・レーヨン・ポリエステル 等）
+  - 伝統色: 18 → 28（瑠璃色・萌黄色・紅梅色・檜皮色・空色・烏羽色・蘇芳・
+    芥子色・東雲色・常磐色 を追加）
+  - subject_hint: 羽織・袴・甚平・ベスト・タキシード・チャイナドレス・
+    エプロン を追加（24 → 31）
+- **モデルに合わせたプロンプトの自動生成・拡張機能を新設**
+  （`nodes/model_profiles.py`）:
+  - SD1.5アニメ系 / Pony Diffusion V6 / Illustrious XL / NoobAI XL /
+    SDXL Base / FLUX.1 / SD3-3.5 の7系統＋汎用のプロファイルを収録
+  - タグ系モデル: quality/negativeタグの自動付与、アンダースコア表記への変換
+  - 自然文系モデル: 装飾語彙を流暢な英語の説明文へ拡張
+  - FLUX.1: negative promptを常に空文字で返す（アーキテクチャ上不要なため）
+  - 🧵 Prompt Composer / 🧩 Auto に `target_model` 入力と
+    `model_prompt` / `model_negative_prompt` 出力を追加
+  - 新規ノード 🧠 **Model Prompt Adapter** — 任意のプロンプトを
+    対象モデル系統向けに単体で変換・拡張可能
+- 単体テスト 54 → 75件（全通過）
+
+## v0.2.0
+- 日本語対応: バイリンガルドロップダウン（`"english_key | 日本語ラベル"`）、
+  日本の伝統色名（漢字/ローマ字）、日本語服飾用語の自動英語変換を追加
+- decoration_preset: 18 → 32、pattern: 10 → 18（和柄8種追加）、
+  material: 10 → 15（和素材5種追加）
+
+## v0.1.0
+- 初版: ✂️ Mask Prep / 🖼️ Region Extract / 🔀 Paste Back /
+  🧵 Prompt Composer / 🎨 Direct Paint / 🧩 Auto の6ノード

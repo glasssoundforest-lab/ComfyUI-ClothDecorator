@@ -66,6 +66,21 @@ DECORATION_PRESETS: dict[str, list[str]] = {
     "kamon_emblem": ["kamon-style emblem", "Japanese family crest motif"],
     "bow_accent": ["decorative bow accent"],
     "corset_lacing": ["corset-style lacing detail"],
+    # ★さらに拡充分（第2弾）
+    "crystal_beading": ["crystal beading", "hand-sewn crystal beadwork"],
+    "lace_overlay": ["lace overlay", "sheer lace layered over fabric"],
+    "velvet_trim": ["velvet trim accent", "plush velvet edging"],
+    "silk_flower": ["silk flower corsage", "fabric flower accent"],
+    "ornate_buttons": ["ornate decorative buttons", "engraved button details"],
+    "piping_trim": ["contrast piping trim"],
+    "quilted_pattern": ["quilted diamond stitching", "padded quilted texture"],
+    "drawstring_detail": ["drawstring gathering detail"],
+    "corset_boning": ["visible corset boning structure"],
+    "epaulette_trim": ["epaulette shoulder trim", "military-style shoulder detail"],
+    "brocade_trim": ["brocade trim accent", "woven brocade edging"],
+    "shibori_dye": ["shibori dye pattern", "traditional Japanese tie-dye texture"],
+    "yuzen_dye": ["yuzen dye artwork", "hand-painted Japanese silk dyeing"],
+    "katazome_stencil": ["katazome stencil-dyed pattern", "Japanese paste-resist stencil dyeing"],
     "custom": [],  # free_text のみで構成
 }
 
@@ -103,6 +118,20 @@ DECORATION_LABELS_JA: dict[str, str] = {
     "kamon_emblem": "家紋風エンブレム",
     "bow_accent": "ボウタイ・蝶結び",
     "corset_lacing": "コルセットレース編み上げ",
+    "crystal_beading": "クリスタルビーズ刺繍",
+    "lace_overlay": "レースオーバーレイ",
+    "velvet_trim": "ベルベットトリム",
+    "silk_flower": "布花コサージュ",
+    "ornate_buttons": "装飾ボタン",
+    "piping_trim": "パイピング",
+    "quilted_pattern": "キルティング",
+    "drawstring_detail": "ドローストリング（絞り紐）",
+    "corset_boning": "コルセットボーニング",
+    "epaulette_trim": "エポレット（肩章）",
+    "brocade_trim": "ブロケードトリム",
+    "shibori_dye": "絞り染め",
+    "yuzen_dye": "友禅染め",
+    "katazome_stencil": "型染め",
     "custom": "自由入力",
 }
 
@@ -130,6 +159,12 @@ PATTERN_VOCAB: dict[str, str] = {
     "kikkou": "kikkou, Japanese tortoiseshell hexagon pattern",
     "shippou": "shippou, Japanese interlocking circles pattern",
     "raimon": "raimon, Japanese thunder/key-fret pattern",
+    "uroko": "uroko, Japanese triangular scale pattern",
+    "tatewaku": "tatewaku, Japanese rising vapor stripe pattern",
+    "sayagata": "sayagata, Japanese interlocking key-fret pattern",
+    "kagome": "kagome, Japanese woven basket-weave star pattern",
+    "matsukawabishi": "matsukawabishi, Japanese pine-bark diamond pattern",
+    "yagasuri": "yagasuri, Japanese arrow-feather pattern",
     "custom": "",
 }
 
@@ -153,6 +188,12 @@ PATTERN_LABELS_JA: dict[str, str] = {
     "kikkou": "亀甲柄",
     "shippou": "七宝柄",
     "raimon": "雷紋",
+    "uroko": "鱗文様",
+    "tatewaku": "立涌",
+    "sayagata": "紗綾形",
+    "kagome": "籠目",
+    "matsukawabishi": "松皮菱",
+    "yagasuri": "矢絣",
     "custom": "自由入力",
 }
 
@@ -177,6 +218,12 @@ MATERIAL_VOCAB: dict[str, str] = {
     "kinran": "kinran, gold brocade fabric",
     "nishijin_ori": "nishijin-ori, Japanese woven brocade texture",
     "tsumugi": "tsumugi, Japanese hand-woven pongee silk texture",
+    "hemp_asa": "asa, Japanese hemp fabric texture",
+    "ramie": "ramie fabric texture",
+    "nishiki_brocade": "nishiki, Japanese luxury brocade texture",
+    "habutai": "habutai, smooth plain-weave silk texture",
+    "rayon": "rayon fabric",
+    "polyester": "polyester fabric",
     "custom": "",
 }
 
@@ -197,6 +244,12 @@ MATERIAL_LABELS_JA: dict[str, str] = {
     "kinran": "金襴",
     "nishijin_ori": "西陣織",
     "tsumugi": "紬",
+    "hemp_asa": "麻",
+    "ramie": "苧麻（ラミー）",
+    "nishiki_brocade": "錦",
+    "habutai": "羽二重",
+    "rayon": "レーヨン",
+    "polyester": "ポリエステル",
     "custom": "自由入力",
 }
 
@@ -248,6 +301,16 @@ TRADITIONAL_COLORS_JA: dict[str, dict[str, str]] = {
     "浅葱色": {"romaji": "asagi-iro", "en": "light blue-green", "hex": "#00a3af"},
     "紫紺": {"romaji": "shikon", "en": "deep bluish purple", "hex": "#460e44"},
     "生成り": {"romaji": "kinari", "en": "undyed off-white", "hex": "#f8f4e6"},
+    "瑠璃色": {"romaji": "ruri-iro", "en": "lapis lazuli blue", "hex": "#1e50a2"},
+    "萌黄色": {"romaji": "moegi-iro", "en": "fresh yellow-green", "hex": "#aacf53"},
+    "紅梅色": {"romaji": "koubai-iro", "en": "plum blossom pink", "hex": "#e7609e"},
+    "檜皮色": {"romaji": "hihada-iro", "en": "cypress bark brown", "hex": "#78384f"},
+    "空色": {"romaji": "sora-iro", "en": "sky blue", "hex": "#8fd8d2"},
+    "烏羽色": {"romaji": "karasuba-iro", "en": "raven black with blue sheen", "hex": "#211c1c"},
+    "蘇芳": {"romaji": "suou", "en": "dark red-purple", "hex": "#9e3d3f"},
+    "芥子色": {"romaji": "karashi-iro", "en": "mustard yellow", "hex": "#d6a418"},
+    "東雲色": {"romaji": "shinonome-iro", "en": "dawn pink", "hex": "#f19072"},
+    "常磐色": {"romaji": "tokiwa-iro", "en": "evergreen", "hex": "#007b43"},
 }
 
 # ── 服飾対象語（subject_hint）日本語→英語 ─────────────────────────────
@@ -276,6 +339,13 @@ SUBJECT_HINT_JA_TO_EN: dict[str, str] = {
     "バッグ": "bag",
     "スカーフ": "scarf",
     "マフラー": "scarf",
+    "羽織": "haori",
+    "袴": "hakama",
+    "甚平": "jinbei",
+    "ベスト": "vest",
+    "タキシード": "tuxedo",
+    "チャイナドレス": "cheongsam",
+    "エプロン": "apron",
 }
 
 DEFAULT_NEGATIVE_TERMS: list[str] = [
@@ -298,6 +368,7 @@ class DecorationPromptResult:
     negative_prompt: str
     merged_prompt: str
     terms_used: list[str] = field(default_factory=list)
+    negative_terms_used: list[str] = field(default_factory=list)
     resolved: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -307,6 +378,7 @@ class DecorationPromptResult:
             "negative_prompt": self.negative_prompt,
             "merged_prompt": self.merged_prompt,
             "terms_used": self.terms_used,
+            "negative_terms_used": self.negative_terms_used,
             "resolved": self.resolved,
         }
 
@@ -492,6 +564,7 @@ def build_decoration_prompt(
     negative_terms = list(DEFAULT_NEGATIVE_TERMS)
     if negative_extra.strip():
         negative_terms.extend(t.strip() for t in negative_extra.split(",") if t.strip())
+    negative_terms = _dedupe_list(negative_terms)
     negative_prompt = _dedupe_join(negative_terms)
 
     if base_prompt.strip():
@@ -507,6 +580,7 @@ def build_decoration_prompt(
         negative_prompt=negative_prompt,
         merged_prompt=merged_prompt,
         terms_used=terms,
+        negative_terms_used=negative_terms,
         resolved={
             "decoration_preset": preset_key,
             "pattern": pattern_key,

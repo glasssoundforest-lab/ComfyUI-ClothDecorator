@@ -29,6 +29,7 @@ ClothPasteBackNode = _safe("paste_back", "ClothPasteBackNode")
 ClothPromptComposerNode = _safe("prompt_composer", "ClothPromptComposerNode")
 ClothDirectPaintNode = _safe("direct_paint", "ClothDirectPaintNode")
 ClothDecoratorAutoNode = _safe("auto_mode", "ClothDecoratorAutoNode")
+ClothPromptModelAdapterNode = _safe("model_adapter", "ClothPromptModelAdapterNode")
 
 _all = {
     "ClothMaskPrep": ClothMaskPrepNode,
@@ -37,6 +38,7 @@ _all = {
     "ClothPromptComposer": ClothPromptComposerNode,
     "ClothDirectPaint": ClothDirectPaintNode,
     "ClothDecoratorAuto": ClothDecoratorAutoNode,
+    "ClothPromptModelAdapter": ClothPromptModelAdapterNode,
 }
 
 NODE_CLASS_MAPPINGS = {k: v for k, v in _all.items() if v is not None}
@@ -48,6 +50,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ClothPromptComposer": "🧵 Cloth Decorator - Prompt Composer",
     "ClothDirectPaint": "🎨 Cloth Decorator - Direct Paint",
     "ClothDecoratorAuto": "🧩 Cloth Decorator - Auto",
+    "ClothPromptModelAdapter": "🧠 Cloth Decorator - Model Prompt Adapter",
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     k: v for k, v in NODE_DISPLAY_NAME_MAPPINGS.items() if k in NODE_CLASS_MAPPINGS

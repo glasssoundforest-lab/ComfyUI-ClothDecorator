@@ -7,10 +7,15 @@ nodes/prompt_composer.py
 標準ComfyUIノードにそのまま接続できる prompt / negative_prompt /
 prepared_mask を出力する。実際のピクセル生成はここでは行わない。
 
+target_model を指定すると、装飾語彙を対象モデル系統（SD1.5アニメ系/
+Pony/Illustrious/SDXL/FLUX/SD3 等）に適したタグ書式・自然文へ
+自動的に変換・拡張した model_prompt / model_negative_prompt も出力する
+（詳細は nodes/model_profiles.py を参照）。
+
 接続例:
   [SAM等] ── mask ──┐
-                      ├→ [🧵 Prompt Composer] → prompt ──→ [CLIP Text Encode]
-  [既存プロンプト] ─┘                        → negative_prompt → [CLIP Text Encode]
+                      ├→ [🧵 Prompt Composer] → model_prompt ──→ [CLIP Text Encode]
+  [既存プロンプト] ─┘                        → model_negative_prompt → [CLIP Text Encode]
                                               → prepared_mask → [SetLatentNoiseMask] / [VAE Encode (for Inpainting)]
 """
 
@@ -19,15 +24,23 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from . import mask_utils, vocabulary
+from . import mask_utils, model_profiles, vocabulary
 from .node_base import ClothDecoratorNodeBase, mask_to_numpy, numpy_to_mask_tensor
 
 
 class ClothPromptComposerNode(ClothDecoratorNodeBase):
     """マスク＋語彙選択から、生成系インペイントノード向けのプロンプトとマスクを組み立てる。"""
 
-    RETURN_TYPES = ("STRING", "STRING", "STRING", "MASK", "STRING")
-    RETURN_NAMES = ("prompt", "negative_prompt", "merged_prompt", "prepared_mask", "debug_json")
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "MASK", "STRING")
+    RETURN_NAMES = (
+        "prompt",
+        "negative_prompt",
+        "merged_prompt",
+        "model_prompt",
+        "model_negative_prompt",
+        "prepared_mask",
+        "debug_json",
+    )
     FUNCTION = "compose"
     CATEGORY = "ClothDecorator"
 
@@ -53,6 +66,16 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
                         list(vocabulary.MATERIAL_VOCAB.keys()), vocabulary.MATERIAL_LABELS_JA
                     ),
                     {"default": vocabulary.bilingual_default("none", vocabulary.MATERIAL_LABELS_JA)},
+                ),
+                "target_model": (
+                    [
+                        f"{k} | {v.label_ja}" if v.label_ja else k
+                        for k, v in model_profiles.MODEL_PROFILES.items()
+                    ],
+                    {
+                        "default": f"generic | {model_profiles.MODEL_PROFILES['generic'].label_ja}",
+                        "tooltip": "model_prompt/model_negative_prompt の書式を合わせる対象モデル系統",
+                    },
                 ),
                 "subject_hint": (
                     "STRING",
@@ -109,6 +132,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         decoration_preset: str,
         pattern: str,
         material: str,
+        target_model: str,
         subject_hint: str,
         grow_px: int,
         feather_px: float,
@@ -116,7 +140,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         free_text: str = "",
         base_prompt: str = "",
         negative_extra: str = "",
-    ) -> tuple[str, str, str, Any, str]:
+    ) -> tuple[str, str, str, str, str, Any, str]:
         result = vocabulary.build_decoration_prompt(
             decoration_preset=decoration_preset,
             pattern=pattern,
@@ -126,6 +150,14 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
             subject_hint=subject_hint,
             base_prompt=base_prompt,
             negative_extra=negative_extra,
+        )
+
+        model_key = target_model.split(" | ", 1)[0].strip()
+        model_prompt, model_negative_prompt, style_used = model_profiles.adapt_prompt(
+            terms=result.terms_used,
+            subject=result.resolved.get("subject_hint", ""),
+            negative_terms=result.negative_terms_used,
+            target_model=model_key,
         )
 
         m = mask_to_numpy(mask)
@@ -140,11 +172,15 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         debug["raw_decoration_preset"] = decoration_preset
         debug["raw_pattern"] = pattern
         debug["raw_material"] = material
+        debug["target_model"] = model_key
+        debug["prompt_style_used"] = style_used
 
         return (
             result.inpaint_prompt,
             result.negative_prompt,
             result.merged_prompt,
+            model_prompt,
+            model_negative_prompt,
             numpy_to_mask_tensor(m),
             json.dumps(debug, ensure_ascii=False, indent=2),
         )

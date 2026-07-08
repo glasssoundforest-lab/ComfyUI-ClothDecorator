@@ -8,7 +8,11 @@ mode 選択で切り替えられるようにしたもの。ワークフローを
 個別に細かく制御したい場合は 🎨 / 🧵 の専用ノードを直接使うことを推奨する。
 
 mode = "direct_paint":       image を直接加工して返す（generative_* 出力は空）
-mode = "generative_prompt":  プロンプト一式とマスクを返す（image はパススルー）
+mode = "generative_prompt":  プロンプト一式とマスクを返す（image はパススルー）。
+                              target_model を指定すると model_prompt /
+                              model_negative_prompt も対象モデル系統に
+                              合わせて生成・拡張される（詳細は
+                              nodes/model_profiles.py を参照）。
 """
 
 from __future__ import annotations
@@ -16,7 +20,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from . import mask_utils, paint_ops, vocabulary
+from . import mask_utils, model_profiles, paint_ops, vocabulary
 from .node_base import (
     ClothDecoratorNodeBase,
     mask_to_numpy,
@@ -29,12 +33,14 @@ from .node_base import (
 class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
     """mode で Direct Paint / Prompt Composer を切り替える統合ノード。"""
 
-    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "MASK", "STRING")
+    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "STRING", "STRING", "MASK", "STRING")
     RETURN_NAMES = (
         "image",
         "prompt",
         "negative_prompt",
         "merged_prompt",
+        "model_prompt",
+        "model_negative_prompt",
         "prepared_mask",
         "debug_json",
     )
@@ -65,6 +71,16 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                             "embroidery", vocabulary.DECORATION_LABELS_JA
                         ),
                         "tooltip": "mode=generative_prompt のとき使用",
+                    },
+                ),
+                "target_model": (
+                    [
+                        f"{k} | {v.label_ja}" if v.label_ja else k
+                        for k, v in model_profiles.MODEL_PROFILES.items()
+                    ],
+                    {
+                        "default": f"generic | {model_profiles.MODEL_PROFILES['generic'].label_ja}",
+                        "tooltip": "mode=generative_prompt のとき model_prompt の書式を合わせる対象モデル系統",
                     },
                 ),
                 "color": (
@@ -107,6 +123,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         mask: Any,
         decoration_type: str,
         decoration_preset: str,
+        target_model: str,
         color: str,
         opacity: float,
         feather_px: float,
@@ -119,7 +136,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         subject_hint: str = "clothing",
         base_prompt: str = "",
         grow_px: int = 8,
-    ) -> tuple[Any, str, str, str, Any, str]:
+    ) -> tuple[Any, str, str, str, str, str, Any, str]:
         mask_np = mask_to_numpy(mask)
 
         if mode == "direct_paint":
@@ -154,6 +171,8 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                 "",
                 "",
                 "",
+                "",
+                "",
                 numpy_to_mask_tensor(mask_np),
                 json.dumps(debug, ensure_ascii=False),
             )
@@ -168,6 +187,15 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
             subject_hint=subject_hint,
             base_prompt=base_prompt,
         )
+
+        model_key = target_model.split(" | ", 1)[0].strip()
+        model_prompt, model_negative_prompt, style_used = model_profiles.adapt_prompt(
+            terms=result.terms_used,
+            subject=result.resolved.get("subject_hint", ""),
+            negative_terms=result.negative_terms_used,
+            target_model=model_key,
+        )
+
         prepared = mask_np
         if grow_px > 0:
             prepared = mask_utils.grow_mask(prepared, grow_px)
@@ -176,11 +204,15 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
 
         debug = result.to_dict()
         debug["mode"] = mode
+        debug["target_model"] = model_key
+        debug["prompt_style_used"] = style_used
         return (
             image,
             result.inpaint_prompt,
             result.negative_prompt,
             result.merged_prompt,
+            model_prompt,
+            model_negative_prompt,
             numpy_to_mask_tensor(prepared),
             json.dumps(debug, ensure_ascii=False),
         )

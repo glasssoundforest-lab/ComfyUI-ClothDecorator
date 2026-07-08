@@ -1,6 +1,6 @@
 [project]
 name            = "comfyui-cloth-decorator"
-version         = "0.1.0"
+version         = "0.3.0"
 description     = "ComfyUI custom nodes: decorate mask-selected clothing regions via prompt (generative) or direct pixel editing"
 requires-python = ">=3.10"
 dependencies    = ["numpy>=1.24", "Pillow>=10.0"]
