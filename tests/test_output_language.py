@@ -120,3 +120,29 @@ def test_base_prompt_internal_whitespace_is_normalized():
     )
     assert "best quality" in result.merged_prompt
     assert "  " not in result.merged_prompt
+
+
+# ── タグの統合（順不同・重複タグの一本化） ─────────────────────────────
+
+def test_free_text_duplicate_tags_are_consolidated_regardless_of_order():
+    r1 = vocabulary.build_decoration_prompt(decoration_preset="none", free_text="dress, jacket, dress, Jacket")
+    r2 = vocabulary.build_decoration_prompt(decoration_preset="none", free_text="Jacket, dress, jacket, dress")
+    terms1 = {t.lower() for t in r1.decoration_prompt.split(", ")}
+    terms2 = {t.lower() for t in r2.decoration_prompt.split(", ")}
+    assert terms1 == terms2 == {"dress", "jacket"}
+
+
+def test_free_text_tags_dedupe_against_color_and_preset_terms():
+    result = vocabulary.build_decoration_prompt(
+        decoration_preset="embroidery", color="red", free_text="red, sparkly, intricate embroidery"
+    )
+    terms = result.decoration_prompt.split(", ")
+    assert terms.count("red") == 1
+    assert terms.count("intricate embroidery") == 1
+    assert "sparkly" in terms
+
+
+def test_free_text_single_phrase_without_comma_is_unaffected():
+    """カンマを含まない一続きのフレーズは、これまで通り1つの語として扱われる。"""
+    result = vocabulary.build_decoration_prompt(decoration_preset="none", free_text="a delicate hand-stitched look")
+    assert result.decoration_prompt == "a delicate hand-stitched look"

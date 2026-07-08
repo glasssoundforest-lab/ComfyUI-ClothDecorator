@@ -493,8 +493,12 @@ def build_decoration_prompt(
     if material_term:
         terms.append(material_term)
 
+    # free_text はカンマ区切りの複数タグとして書かれることが多いため、
+    # base_prompt/negative_extra と同様に個々のタグへ分割してから追加する。
+    # こうすることで、free_text内の重複や、他カテゴリ（色/装飾/柄/素材）との
+    # 重複タグを、入力順に関係なく一つに統合できる。
     if free_text.strip():
-        terms.append(free_text.strip())
+        terms.extend(t.strip() for t in free_text.split(",") if t.strip())
 
     terms = _dedupe_list(terms)
     decoration_prompt = _dedupe_join(terms)
