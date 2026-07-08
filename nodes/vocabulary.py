@@ -246,11 +246,16 @@ class DecorationPromptResult:
 # 内部ヘルパー
 # ═══════════════════════════════════════════════════════════════════
 
+def _normalize_whitespace(s: str) -> str:
+    """連続する空白・改行・タブを単一の半角スペースに畳み、前後の空白を除く。"""
+    return " ".join(s.split())
+
+
 def _dedupe_list(terms: list[str]) -> list[str]:
     seen: set[str] = set()
     out: list[str] = []
     for t in terms:
-        t = t.strip()
+        t = _normalize_whitespace(t)
         if not t:
             continue
         key = t.lower()

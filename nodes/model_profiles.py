@@ -133,8 +133,13 @@ def model_choices() -> list[str]:
     return list(MODEL_PROFILES.keys())
 
 
+def _normalize_whitespace(s: str) -> str:
+    """連続する空白・改行・タブを単一の半角スペースに畳み、前後の空白を除く。"""
+    return " ".join(s.split())
+
+
 def _tagify(term: str, underscore: bool) -> str:
-    t = term.strip()
+    t = _normalize_whitespace(term)
     if not t:
         return ""
     if underscore:
@@ -146,7 +151,7 @@ def _dedupe_join(parts: list[str], sep: str = ", ") -> str:
     seen: set[str] = set()
     out: list[str] = []
     for p in parts:
-        p = p.strip()
+        p = _normalize_whitespace(p)
         if not p:
             continue
         key = p.lower()
@@ -158,7 +163,8 @@ def _dedupe_join(parts: list[str], sep: str = ", ") -> str:
 
 
 def _join_natural(terms: list[str]) -> str:
-    terms = [t.strip() for t in terms if t.strip()]
+    terms = [_normalize_whitespace(t) for t in terms]
+    terms = [t for t in terms if t]
     if not terms:
         return ""
     if len(terms) == 1:
@@ -171,7 +177,8 @@ def _build_natural_sentence(subject: str, terms: list[str], profile: ModelProfil
     タグの羅列ではなく、流暢な英語の説明文へと「拡張」する。
     自然文系モデル（SDXL/SD3/FLUX等）はこの形式の方が指示追従性が高い。
     """
-    subj = subject.strip() if subject and subject.strip() else "the garment"
+    subj = _normalize_whitespace(subject) if subject else ""
+    subj = subj or "the garment"
     if not terms:
         sentence = f"A finely detailed, high quality photo of {subj}."
     else:
@@ -257,8 +264,8 @@ def adapt_freeform_prompt(
         (positive_prompt, negative_prompt, style_used)
     """
     profile = MODEL_PROFILES.get(target_model, MODEL_PROFILES["generic"])
-    prompt = (prompt or "").strip()
-    subject = (subject or "").strip()
+    prompt = _normalize_whitespace(prompt or "")
+    subject = _normalize_whitespace(subject or "")
 
     if profile.style == "tags":
         terms = [t.strip() for t in prompt.split(",") if t.strip()]

@@ -95,3 +95,28 @@ def test_resolve_subject_bilingual_empty_defaults():
     en, ja = vocabulary.resolve_subject_bilingual("")
     assert en == "clothing"
     assert ja == "服"
+
+
+# ── プロンプト整形（空白・改行の正規化） ─────────────────────────────
+
+def test_free_text_internal_whitespace_and_newlines_are_normalized():
+    result = vocabulary.build_decoration_prompt(
+        decoration_preset="none", free_text="  lots of   extra   spaces  \n\n and a newline "
+    )
+    assert result.decoration_prompt == "lots of extra spaces and a newline"
+
+
+def test_negative_extra_internal_whitespace_is_normalized():
+    result = vocabulary.build_decoration_prompt(
+        decoration_preset="none", negative_extra="watermark,   text  with   spaces \n"
+    )
+    assert "text with spaces" in result.negative_prompt
+    assert "  " not in result.negative_prompt
+
+
+def test_base_prompt_internal_whitespace_is_normalized():
+    result = vocabulary.build_decoration_prompt(
+        decoration_preset="embroidery", base_prompt="masterpiece,   best  quality \n , 1girl"
+    )
+    assert "best quality" in result.merged_prompt
+    assert "  " not in result.merged_prompt

@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## v0.7.4
+- **プロンプト整形の抜けを発見・修正**: 手動でタグを選んでプロンプト化する際、
+  重複除去（既存機能）は正しく動いていたが、`free_text`/`negative_extra`/
+  `base_prompt`/対象語（subject_hint）内の**連続空白・改行・タブが
+  正規化されずそのままプロンプトに残る**バグがあった
+  （例: `"lots of   extra   spaces\n\n"` → 変更後は
+  `"lots of extra spaces"`）。
+  - `nodes/vocabulary.py`: `_dedupe_list`/`_dedupe_join` に空白正規化を統合。
+    `decoration_prompt`/`inpaint_prompt`/`negative_prompt`/`merged_prompt`
+    すべてに反映
+  - `nodes/model_profiles.py`: タグ系モデル向け整形（`_tagify`/`_dedupe_join`）
+    と自然文系モデル向け整形（`_join_natural`/`_build_natural_sentence`/
+    `adapt_freeform_prompt`）の両方に同様の修正。タグ系モデルでは、
+    内部の連続空白がアンダースコア変換時に `word__word` のような二重
+    アンダースコアになる不具合もあわせて解消
+- 新規回帰テスト7件を追加。単体テスト194 → **200件**（全通過）
+
 ## v0.7.3
 - **全語彙辞書の重複を体系的に検査**（キーだけでなく、日本語ラベル・
   英語プロンプト表現・伝統色のhexコードまで含めて確認）:

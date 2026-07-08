@@ -90,6 +90,36 @@ def test_model_choices_contains_all_keys(key):
     assert key in mp.model_choices()
 
 
+# ── プロンプト整形（空白・改行の正規化） ─────────────────────────────
+
+def test_adapt_prompt_tags_style_normalizes_internal_whitespace():
+    positive, _, _ = mp.adapt_prompt(
+        ["red   dress", "lace\ttrim"], "a  girl", [], "sd15_anime"
+    )
+    assert "red_dress" in positive
+    assert "lace_trim" in positive
+    assert "__" not in positive
+
+
+def test_adapt_prompt_natural_style_normalizes_internal_whitespace():
+    positive, _, _ = mp.adapt_prompt(["red   dress", "lace\ttrim"], "a  dress", [], "sdxl_base")
+    assert "  " not in positive
+    assert "\t" not in positive
+
+
+def test_adapt_freeform_prompt_normalizes_whitespace_in_both_styles():
+    tag_positive, _, _ = mp.adapt_freeform_prompt(
+        "red   dress,\nlace  trim", subject="1girl", target_model="sd15_anime"
+    )
+    assert "  " not in tag_positive
+
+    natural_positive, _, _ = mp.adapt_freeform_prompt(
+        "a red   dress\nwith lace", subject="1girl  here", target_model="sdxl_base"
+    )
+    assert "  " not in natural_positive
+    assert "\n" not in natural_positive
+
+
 # ── adapt_freeform_prompt（🧠 Model Prompt Adapter ノード用） ───────────
 
 def test_freeform_tags_style_splits_and_tagifies():
