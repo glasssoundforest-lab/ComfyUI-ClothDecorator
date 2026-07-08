@@ -96,6 +96,43 @@ Region Extract を挟まず、`LoadImage` の image と mask を直接
 [SAM/クリック選択] mask ┘
 ```
 
+## 大項目・中項目カテゴリ分類
+
+`nodes/categories.py` に、各語彙辞書のキーを大項目（major）・中項目（mid）で
+分類する対応表を定義しています。ComfyUI のドロップダウンには
+`"[大項目 > 中項目] english_key | 日本語ラベル"` の形式でグルーピング表示され、
+項目数が多くても目的の装飾技法を探しやすくなっています。
+
+- **decoration_preset**（82種）: 大項目7 × 中項目2〜3の2階層分類
+- **pattern**（38種）/ **material**（33種）/ 伝統色（43種）/ **subject_hint**（42種）:
+  大項目のみの1階層分類
+
+### decoration_preset の大項目・中項目一覧
+
+| 大項目 | 中項目 |
+|---|---|
+| 刺繍・ビーズ手芸 | 刺繍技法 / ビーズ・宝飾 / アップリケ・パッチ |
+| トリム・縁飾り | レース・リボン / フリンジ・タッセル・羽根 / パイピング・ブロケード |
+| 染色・プリント技法 | 和染め技法 / 世界の染め技法 / プリント技法 |
+| 織り・構造技法 | 織り柄技法 / キルト・重ね構造 |
+| 金具・留め具 | ボタン・スタッズ / 編み上げ・留め構造 |
+| 加工・仕上げ効果 | 光沢・煌めき / 手仕事・アート / テクノロジー系 |
+| テーマ・スタイル装飾 | ゴシック・パンク / ブライダル・フォーマル / 民族衣装モチーフ |
+
+### pattern / material / 伝統色 / subject_hint の大項目
+
+| 辞書 | 大項目 |
+|---|---|
+| pattern | 幾何学柄 / 自然モチーフ柄 / 和柄 / 世界の織物柄 |
+| material | 天然繊維 / 和素材 / 化学繊維 / 特殊質感 |
+| 伝統色 | 紅・赤系統 / 藍・青系統 / 緑系統 / 黄・橙系統 / 紫系統 / 白・黒・鼠系統 |
+| subject_hint | 和装 / 洋装フォーマル / 洋装カジュアル / アウター / 小物・その他 |
+
+新しい項目を追加する際は、`nodes/vocabulary.py` の各辞書に本体（英語キー・
+プロンプト語・日本語ラベル）を追加した上で、`nodes/categories.py` の対応する
+`*_CATEGORY_OF` にキー→(大項目, 中項目) の割り当てを追加してください
+（`tests/test_categories.py` が未分類キーを検出します）。
+
 ## 日本語対応
 
 Stable Diffusion系モデルは英語プロンプトの方が精度が出やすいため、辞書の
@@ -157,8 +194,8 @@ subject_hint=dress）:
 
 ## decoration_preset（🧵 Prompt Composer / 🧩 Auto）
 
-72種類のプリセットを収録（`nodes/vocabulary.py` の `DECORATION_PRESETS`）。
-主なカテゴリ:
+82種類のプリセットを収録（`nodes/vocabulary.py` の `DECORATION_PRESETS`）。
+上記の大項目・中項目カテゴリ一覧も参照してください。主なカテゴリ:
 
 - 基本装飾: `embroidery` / `lace_trim` / `sequins` / `beading` / `ribbon_bow` /
   `floral_applique` / `glitter` / `studs` / `printed_pattern` 等
@@ -179,8 +216,8 @@ subject_hint=dress）:
 - モダン: `laser_cut_pattern` / `led_light_trim`
 - `custom`（free_text のみで構成）
 
-同様に pattern（36種）・material（31種）・伝統色（38種）・subject_hint
-（39種）も拡充されています。プロジェクト固有の装飾語・色・柄・素材を
+同様に pattern（38種）・material（33種）・伝統色（43種）・subject_hint
+（42種）も拡充されています。プロジェクト固有の装飾語・色・柄・素材を
 追加したい場合はこのファイルの各辞書（`DECORATION_PRESETS` /
 `PATTERN_VOCAB` / `MATERIAL_VOCAB` / `TRADITIONAL_COLORS_JA` /
 `SUBJECT_HINT_JA_TO_EN`）と、対応する `*_LABELS_JA` を編集してください。

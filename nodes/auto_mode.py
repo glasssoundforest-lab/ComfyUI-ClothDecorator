@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from . import mask_utils, model_profiles, paint_ops, vocabulary
+from . import categories, mask_utils, model_profiles, paint_ops, vocabulary
 from .node_base import (
     ClothDecoratorNodeBase,
     mask_to_numpy,
@@ -63,13 +63,9 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                     {"default": "solid_color", "tooltip": "mode=direct_paint のとき使用"},
                 ),
                 "decoration_preset": (
-                    vocabulary.bilingual_options(
-                        list(vocabulary.DECORATION_PRESETS.keys()), vocabulary.DECORATION_LABELS_JA
-                    ),
+                    categories.grouped_decoration_options(),
                     {
-                        "default": vocabulary.bilingual_default(
-                            "embroidery", vocabulary.DECORATION_LABELS_JA
-                        ),
+                        "default": categories.grouped_default_decoration("embroidery"),
                         "tooltip": "mode=generative_prompt のとき使用",
                     },
                 ),
@@ -98,14 +94,20 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                 "pattern_image": ("IMAGE",),
                 "texture_image": ("IMAGE",),
                 "pattern": (
-                    vocabulary.bilingual_options(
-                        list(vocabulary.PATTERN_VOCAB.keys()), vocabulary.PATTERN_LABELS_JA
+                    categories.grouped_single_level_options(
+                        list(vocabulary.PATTERN_VOCAB.keys()),
+                        vocabulary.PATTERN_LABELS_JA,
+                        categories.PATTERN_CATEGORY_OF,
+                        categories.PATTERN_MAJOR_LABELS_JA,
                     ),
                     {"default": vocabulary.bilingual_default("none", vocabulary.PATTERN_LABELS_JA)},
                 ),
                 "material": (
-                    vocabulary.bilingual_options(
-                        list(vocabulary.MATERIAL_VOCAB.keys()), vocabulary.MATERIAL_LABELS_JA
+                    categories.grouped_single_level_options(
+                        list(vocabulary.MATERIAL_VOCAB.keys()),
+                        vocabulary.MATERIAL_LABELS_JA,
+                        categories.MATERIAL_CATEGORY_OF,
+                        categories.MATERIAL_MAJOR_LABELS_JA,
                     ),
                     {"default": vocabulary.bilingual_default("none", vocabulary.MATERIAL_LABELS_JA)},
                 ),
@@ -138,6 +140,9 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         grow_px: int = 8,
     ) -> tuple[Any, str, str, str, str, str, Any, str]:
         mask_np = mask_to_numpy(mask)
+        decoration_preset = categories.resolve_grouped_key(decoration_preset)
+        pattern = categories.resolve_grouped_key(pattern)
+        material = categories.resolve_grouped_key(material)
 
         if mode == "direct_paint":
             img_np = tensor_to_numpy_uint8(image)

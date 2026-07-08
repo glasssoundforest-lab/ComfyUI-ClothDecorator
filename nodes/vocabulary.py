@@ -106,6 +106,19 @@ DECORATION_PRESETS: dict[str, list[str]] = {
     "frog_buttons": ["Chinese frog button closures", "knotted frog fastenings"],
     "laser_cut_pattern": ["laser-cut cutout pattern", "precision-cut fabric lacework"],
     "led_light_trim": ["glowing LED light trim", "illuminated fiber-optic accent"],
+    # ★さらに拡充分（第5弾・大項目/中項目の手薄なカテゴリを補強）
+    "thermochromic_dye": ["thermochromic color-shifting dye", "heat-reactive color-changing fabric"],
+    "uv_reactive_print": ["UV-reactive print", "blacklight-glowing pattern"],
+    "3d_printed_lattice": ["3D-printed lattice texture", "generative lattice structure detail"],
+    "smart_fiber_circuitry": ["embedded smart-fiber circuitry", "e-textile circuit pattern"],
+    "spiked_leather_harness": ["spiked leather harness accent"],
+    "chain_harness_accent": ["chain harness accent", "layered chain body harness detail"],
+    "tiered_bridal_lace": ["tiered bridal lace layers", "cascading lace tiers"],
+    "ivory_satin_bow": ["ivory satin bow accent"],
+    "cathedral_train_lace": ["cathedral-length lace train detail"],
+    "huipil_embroidery": ["huipil-style embroidery", "Mesoamerican geometric embroidery"],
+    "shweshwe_print": ["shweshwe print", "South African indigo discharge-printed pattern"],
+    "hanbok_ribbon": ["hanbok goreum ribbon tie", "Korean traditional ribbon sash"],
     "custom": [],  # free_text のみで構成
 }
 
@@ -181,6 +194,18 @@ DECORATION_LABELS_JA: dict[str, str] = {
     "frog_buttons": "チャイナボタン（組み紐留め）",
     "laser_cut_pattern": "レーザーカット柄",
     "led_light_trim": "LEDライトトリム",
+    "thermochromic_dye": "感温変色染め",
+    "uv_reactive_print": "UV反応プリント",
+    "3d_printed_lattice": "3Dプリントラティス",
+    "smart_fiber_circuitry": "スマートファイバー回路装飾",
+    "spiked_leather_harness": "スパイクレザーハーネス",
+    "chain_harness_accent": "チェーンハーネス",
+    "tiered_bridal_lace": "ティアードブライダルレース",
+    "ivory_satin_bow": "アイボリーサテンボウ",
+    "cathedral_train_lace": "カテドラルトレーンレース",
+    "huipil_embroidery": "ウイピル刺繍",
+    "shweshwe_print": "シュエシュエプリント",
+    "hanbok_ribbon": "韓服（ハンボク）ゴルム",
     "custom": "自由入力",
 }
 
@@ -225,6 +250,10 @@ PATTERN_VOCAB: dict[str, str] = {
     "tartan": "tartan pattern",
     "arabesque_tile": "arabesque geometric tile pattern",
     "mandala": "mandala pattern",
+    "gingham": "gingham check pattern",
+    "chevron": "chevron zigzag pattern",
+    "herringbone": "herringbone weave pattern",
+    "ogee": "ogee pattern, Persian/Islamic curved lattice motif",
     "custom": "",
 }
 
@@ -264,6 +293,10 @@ PATTERN_LABELS_JA: dict[str, str] = {
     "tartan": "タータン柄",
     "arabesque_tile": "アラベスク幾何学タイル柄",
     "mandala": "曼荼羅柄",
+    "gingham": "ギンガムチェック",
+    "chevron": "シェブロン柄",
+    "herringbone": "ヘリンボーン柄",
+    "ogee": "オジー柄（ペルシャ格子）",
     "custom": "自由入力",
 }
 
@@ -302,6 +335,10 @@ MATERIAL_VOCAB: dict[str, str] = {
     "faux_fur": "faux fur texture",
     "neoprene": "neoprene fabric texture",
     "mesh_fabric": "sheer mesh fabric",
+    "cashmere": "cashmere fabric",
+    "angora": "angora wool texture",
+    "spandex_lycra": "stretch spandex/lycra fabric",
+    "pu_leather": "PU faux leather texture",
     "custom": "",
 }
 
@@ -336,6 +373,10 @@ MATERIAL_LABELS_JA: dict[str, str] = {
     "faux_fur": "フェイクファー",
     "neoprene": "ネオプレン",
     "mesh_fabric": "メッシュ生地",
+    "cashmere": "カシミヤ",
+    "angora": "アンゴラ",
+    "spandex_lycra": "スパンデックス（ライクラ）",
+    "pu_leather": "合成皮革（PUレザー）",
     "custom": "自由入力",
 }
 
@@ -407,6 +448,11 @@ TRADITIONAL_COLORS_JA: dict[str, dict[str, str]] = {
     "銀鼠": {"romaji": "gin-nezu", "en": "silver gray", "hex": "#91989f"},
     "江戸紫": {"romaji": "edo-murasaki", "en": "edo purple", "hex": "#745399"},
     "桔梗色": {"romaji": "kikyou-iro", "en": "bellflower purple-blue", "hex": "#4c6cb3"},
+    "桃色": {"romaji": "momo-iro", "en": "peach pink", "hex": "#f7b8ac"},
+    "鉄紺": {"romaji": "tekkon", "en": "dark iron navy", "hex": "#16264c"},
+    "柿色": {"romaji": "kaki-iro", "en": "persimmon orange", "hex": "#ed6d3d"},
+    "若苗色": {"romaji": "wakanae-iro", "en": "young rice-seedling green", "hex": "#a8cb17"},
+    "京紫": {"romaji": "kyo-murasaki", "en": "Kyoto reddish purple", "hex": "#8b3a7c"},
 }
 
 # ── 服飾対象語（subject_hint）日本語→英語 ─────────────────────────────
@@ -450,6 +496,9 @@ SUBJECT_HINT_JA_TO_EN: dict[str, str] = {
     "花嫁衣装": "wedding dress",
     "軍服": "military uniform",
     "白衣": "lab coat",
+    "スーツ": "suit",
+    "ドレスシャツ": "dress shirt",
+    "マント": "mantle cloak",
 }
 
 DEFAULT_NEGATIVE_TERMS: list[str] = [
