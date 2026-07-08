@@ -31,7 +31,7 @@ from .node_base import ClothDecoratorNodeBase, mask_to_numpy, numpy_to_mask_tens
 class ClothPromptComposerNode(ClothDecoratorNodeBase):
     """マスク＋語彙選択から、生成系インペイントノード向けのプロンプトとマスクを組み立てる。"""
 
-    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "MASK", "STRING")
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "MASK", "STRING", "STRING")
     RETURN_NAMES = (
         "prompt",
         "negative_prompt",
@@ -39,6 +39,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         "model_prompt",
         "model_negative_prompt",
         "prepared_mask",
+        "conflict_warning",
         "debug_json",
     )
     FUNCTION = "compose"
@@ -111,6 +112,17 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
                     "FLOAT",
                     {"default": 6.0, "min": 0.0, "max": 100.0, "step": 0.5},
                 ),
+                "confirm_continue": (
+                    "BOOLEAN",
+                    {
+                        "default": False,
+                        "tooltip": (
+                            "color/free_text/subject_hint の間で色や対象の服/部位が"
+                            "複数競合している場合、既定ではエラーで停止して内容を確認できるようにする。"
+                            "内容を確認した上で意図通りであれば ON にして再実行すると続行する。"
+                        ),
+                    },
+                ),
             },
             "optional": {
                 "color": (
@@ -178,6 +190,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         subject_hint: str,
         grow_px: int,
         feather_px: float,
+        confirm_continue: bool = False,
         color: str = "",
         free_text: str = "",
         base_prompt: str = "",
@@ -185,7 +198,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         decoration_preset_override: str = "",
         pattern_override: str = "",
         material_override: str = "",
-    ) -> tuple[str, str, str, str, str, Any, str]:
+    ) -> tuple[str, str, str, str, str, Any, str, str]:
         decoration_preset = categories.resolve_grouped_key(decoration_preset)
         pattern = categories.resolve_grouped_key(pattern)
         material = categories.resolve_grouped_key(material)
@@ -196,6 +209,22 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
             pattern = categories.resolve_grouped_key(pattern_override.strip())
         if material_override.strip():
             material = categories.resolve_grouped_key(material_override.strip())
+
+        # タグの衝突検出（同じカテゴリに異なる値が複数指定されていないか）。
+        # 検出された場合、confirm_continue=False（既定）なら処理を中断してエラーで
+        # 知らせる（ComfyUI上でノードが赤くハイライトされ、内容を確認できる）。
+        # 内容を確認した上で意図通りなら confirm_continue=True で再実行すれば続行する。
+        conflicts = vocabulary.detect_tag_conflicts(
+            color=color, free_text=free_text, subject_hint=subject_hint
+        )
+        conflict_warning = vocabulary.format_conflict_message(conflicts)
+        if conflicts and not confirm_continue:
+            details = "\n".join(f"  - {c.message}" for c in conflicts)
+            raise ValueError(
+                "⚠ タグの競合が検出されました。内容を確認してください:\n"
+                f"{details}\n"
+                "意図した内容であれば confirm_continue を ON にして再実行すると続行します。"
+            )
 
         result = vocabulary.build_decoration_prompt(
             decoration_preset=decoration_preset,
@@ -237,6 +266,10 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
             "pattern": bool(pattern_override.strip()),
             "material": bool(material_override.strip()),
         }
+        debug["conflicts"] = [
+            {"category": c.category, "values": c.values, "message": c.message} for c in conflicts
+        ]
+        debug["confirm_continue"] = confirm_continue
 
         return (
             result.inpaint_prompt,
@@ -245,5 +278,6 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
             model_prompt,
             model_negative_prompt,
             numpy_to_mask_tensor(m),
+            conflict_warning,
             json.dumps(debug, ensure_ascii=False, indent=2),
         )

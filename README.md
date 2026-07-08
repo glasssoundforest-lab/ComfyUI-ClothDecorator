@@ -55,6 +55,17 @@
   似た意味のタグを意味的に1つへ統合する機能ではありません**（日本語の
   対象語 `subject_hint` 1件を選ぶ場合のみ、辞書上の同義語が英訳段階で
   統一されます）。
+- **タグの衝突検出と確認ゲート**: `color` / `free_text` / `subject_hint`
+  の間で、**同じカテゴリ（色・対象の服/部位）に属する異なるタグが
+  複数指定されている**場合（例: `color="red"` なのに `free_text` にも
+  `"blue"`、`subject_hint="dress"` なのに `free_text` にも `"jacket"`
+  と書かれている等）、🧵 Prompt Composer / 🧩 Auto（`generative_prompt`
+  モード）は既定（`confirm_continue=OFF`）では**処理を中断してエラーを
+  表示**します（ComfyUI上でノードが赤くハイライトされ、競合内容が
+  メッセージに表示されます）。内容を確認した上で意図通りであれば
+  `confirm_continue` を ON にして再実行すると、そのまま両方のタグを
+  含めて続行します。競合の有無・詳細は `conflict_warning` 出力と
+  `debug_json` でも確認できます。
 
 ## インストール
 

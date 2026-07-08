@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## v0.8.0
+- **タグの衝突検出＋確認ゲート機能を新設**: `color` / `free_text` /
+  `subject_hint` の間で、同じカテゴリ（色・対象の服/部位）に属する
+  異なるタグが複数指定されている場合に検出し、ユーザーに確認を求める
+  仕組みを追加した:
+  - 新規関数 `vocabulary.detect_tag_conflicts()` / `format_conflict_message()`
+    （BASE_COLORS・日本の伝統色・subject_hint辞書を用いた語彙マッチングで、
+    色の競合・対象の服/部位の競合を検出する純粋ロジック）
+  - 🧵 Prompt Composer / 🧩 Auto（`generative_prompt`モード）に
+    `confirm_continue`（既定OFF）を追加。衝突が検出されると既定では
+    処理を中断してエラーを送出する（ComfyUI上でノードが赤くハイライト
+    され、競合内容がエラーメッセージに表示される）。内容を確認した上で
+    `confirm_continue` を ON にして再実行すると、競合したまま続行する
+  - 新規出力 `conflict_warning`（STRING）を追加。競合が無ければ空文字、
+    あれば検出内容のサマリを常に出力する（続行時も内容を確認できる）
+  - `debug_json` にも `conflicts` / `confirm_continue` を記録
+  - `🎨 Direct Paint` / 🧩 Auto の `direct_paint` モードは対象外
+    （画像処理であり色の概念が異なるため）
+- 新規テストスイート `tests/test_conflict_detection.py`（14件）を追加。
+  単体テスト203 → **217件**（全通過）
+
 ## v0.7.5
 - **`free_text`欄に複数タグをカンマ区切りで書いた場合、重複が統合されない
   バグを発見・修正**: これまで `free_text` は内容に関わらず「1つの塊」として

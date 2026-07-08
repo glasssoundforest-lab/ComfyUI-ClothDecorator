@@ -24,6 +24,7 @@ Stable Diffusion 系モデルは基本的に英語プロンプトの方が精度
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -403,6 +404,119 @@ def resolve_subject_bilingual(raw: str) -> tuple[str, str]:
     if ja:
         return raw, ja
     return raw, raw
+
+
+# ═══════════════════════════════════════════════════════════════════
+# タグの衝突検出
+# ═══════════════════════════════════════════════════════════════════
+# 「同じカテゴリ（色／対象の服・部位）に属する異なるタグが複数指定されて
+# いないか」を検出する。例: color="red" なのに free_text にも "blue" と
+# 書かれている、subject_hint="dress" なのに free_text に "jacket" とも
+# 書かれている、など。衝突が検出された場合、ノード側は既定では処理を
+# 中断してユーザーに確認を促し（ComfyUI上でエラーとして赤くハイライト
+# される）、`confirm_continue=True` が明示された場合のみ続行する
+# （nodes/prompt_composer.py / nodes/auto_mode.py を参照）。
+
+
+@dataclass
+class TagConflict:
+    category: str  # "color" | "subject"
+    values: list[str]
+    message: str
+
+
+def _find_color_matches(text: str) -> set[str]:
+    """テキスト中に含まれる語彙上の色名（BASE_COLORS + 日本の伝統色）を検出する。"""
+    text = _ensure_str(text)
+    if not text.strip():
+        return set()
+    text_lower = text.lower()
+    found: set[str] = set()
+    for name in BASE_COLORS:
+        if name in ("custom", "pastel"):
+            continue
+        if re.search(rf"\b{re.escape(name)}\b", text_lower):
+            found.add(name)
+    for kanji in TRADITIONAL_COLORS_JA:
+        if kanji in text:
+            found.add(kanji)
+    return found
+
+
+def _find_subject_matches(text: str) -> set[str]:
+    """テキスト中に含まれる語彙上の服飾対象語（英語表現に正規化して）を検出する。"""
+    text = _ensure_str(text)
+    if not text.strip():
+        return set()
+    text_lower = text.lower()
+    found: set[str] = set()
+    for ja, en in SUBJECT_HINT_JA_TO_EN.items():
+        if ja in text:
+            found.add(en)
+    for en in set(SUBJECT_HINT_JA_TO_EN.values()):
+        if re.search(rf"\b{re.escape(en.lower())}\b", text_lower):
+            found.add(en)
+    return found
+
+
+def detect_tag_conflicts(
+    color: str = "",
+    free_text: str = "",
+    subject_hint: str = "",
+) -> list[TagConflict]:
+    """
+    color / free_text / subject_hint の組み合わせの中に、同じカテゴリ
+    （色・対象の服/部位）に属する異なる語彙が複数含まれていないかを検出する。
+
+    Args:
+        color:        color フィールドの値
+        free_text:      free_text フィールドの値
+        subject_hint:    subject_hint フィールドの値
+
+    Returns:
+        検出された衝突のリスト（無ければ空リスト）
+    """
+    color = _ensure_str(color)
+    free_text = _ensure_str(free_text)
+    subject_hint = _ensure_str(subject_hint)
+
+    conflicts: list[TagConflict] = []
+
+    color_matches = _find_color_matches(color) | _find_color_matches(free_text)
+    if len(color_matches) > 1:
+        values = sorted(color_matches)
+        conflicts.append(
+            TagConflict(
+                category="color",
+                values=values,
+                message=f"複数の異なる色タグが検出されました: {', '.join(values)}",
+            )
+        )
+
+    subject_matches = _find_subject_matches(free_text)
+    if subject_hint.strip():
+        resolved = resolve_subject_hint(subject_hint)
+        if resolved and resolved != "clothing":
+            subject_matches.add(resolved)
+    if len(subject_matches) > 1:
+        values = sorted(subject_matches)
+        conflicts.append(
+            TagConflict(
+                category="subject",
+                values=values,
+                message=f"複数の異なる衣装/部位タグが検出されました: {', '.join(values)}",
+            )
+        )
+
+    return conflicts
+
+
+def format_conflict_message(conflicts: list[TagConflict]) -> str:
+    """detect_tag_conflicts() の結果を、ユーザー向けの1つの警告文字列にまとめる。"""
+    if not conflicts:
+        return ""
+    lines = [c.message for c in conflicts]
+    return " / ".join(lines)
 
 
 # ═══════════════════════════════════════════════════════════════════

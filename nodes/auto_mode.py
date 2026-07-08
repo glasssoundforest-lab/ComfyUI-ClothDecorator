@@ -33,7 +33,7 @@ from .node_base import (
 class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
     """mode で Direct Paint / Prompt Composer を切り替える統合ノード。"""
 
-    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "STRING", "STRING", "MASK", "STRING")
+    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "STRING", "STRING", "MASK", "STRING", "STRING")
     RETURN_NAMES = (
         "image",
         "prompt",
@@ -42,6 +42,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         "model_prompt",
         "model_negative_prompt",
         "prepared_mask",
+        "conflict_warning",
         "debug_json",
     )
     FUNCTION = "run"
@@ -92,6 +93,17 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                     ["en", "ja"],
                     {"default": "en", "tooltip": "mode=generative_prompt のときプロンプトを英語/日本語どちらで組み立てるか"},
                 ),
+                "confirm_continue": (
+                    "BOOLEAN",
+                    {
+                        "default": False,
+                        "tooltip": (
+                            "mode=generative_prompt のとき、color/free_text/subject_hint の間で"
+                            "色や対象の服/部位が複数競合している場合は既定でエラー停止する。"
+                            "確認の上で意図通りなら ON にして再実行すると続行する。"
+                        ),
+                    },
+                ),
             },
             "optional": {
                 "color_b": ("STRING", {"default": "#f1c40f"}),
@@ -140,6 +152,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         opacity: float,
         feather_px: float,
         output_language: str = "en",
+        confirm_continue: bool = False,
         color_b: str = "#f1c40f",
         pattern_image: Any = None,
         texture_image: Any = None,
@@ -152,7 +165,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         decoration_preset_override: str = "",
         pattern_override: str = "",
         material_override: str = "",
-    ) -> tuple[Any, str, str, str, str, str, Any, str]:
+    ) -> tuple[Any, str, str, str, str, str, Any, str, str]:
         mask_np = mask_to_numpy(mask)
         decoration_preset = categories.resolve_grouped_key(decoration_preset)
         pattern = categories.resolve_grouped_key(pattern)
@@ -200,10 +213,24 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                 "",
                 "",
                 numpy_to_mask_tensor(mask_np),
+                "",
                 json.dumps(debug, ensure_ascii=False),
             )
 
         # mode == "generative_prompt"
+        # タグの衝突検出（同じカテゴリに異なる値が複数指定されていないか）
+        conflicts = vocabulary.detect_tag_conflicts(
+            color=color, free_text=free_text, subject_hint=subject_hint
+        )
+        conflict_warning = vocabulary.format_conflict_message(conflicts)
+        if conflicts and not confirm_continue:
+            details = "\n".join(f"  - {c.message}" for c in conflicts)
+            raise ValueError(
+                "⚠ タグの競合が検出されました。内容を確認してください:\n"
+                f"{details}\n"
+                "意図した内容であれば confirm_continue を ON にして再実行すると続行します。"
+            )
+
         result = vocabulary.build_decoration_prompt(
             decoration_preset=decoration_preset,
             pattern=pattern,
@@ -233,6 +260,10 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         debug["mode"] = mode
         debug["target_model"] = model_key
         debug["prompt_style_used"] = style_used
+        debug["conflicts"] = [
+            {"category": c.category, "values": c.values, "message": c.message} for c in conflicts
+        ]
+        debug["confirm_continue"] = confirm_continue
         return (
             image,
             result.inpaint_prompt,
@@ -241,5 +272,6 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
             model_prompt,
             model_negative_prompt,
             numpy_to_mask_tensor(prepared),
+            conflict_warning,
             json.dumps(debug, ensure_ascii=False),
         )
