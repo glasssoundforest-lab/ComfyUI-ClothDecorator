@@ -138,6 +138,25 @@ def test_skirt_length_variants_are_registered_and_conflict_with_each_other():
     )
 
 
+def test_dress_length_variants_are_registered_and_conflict_with_each_other():
+    """
+    スカートと同じ理由で見つかった同種のギャップ: 「ミニドレス」「マキシドレス」
+    「ロングドレス」も丈違いスカートと同様に登録し、互いに衝突として検知する。
+    """
+    conflicts = vocabulary.detect_tag_conflicts(free_text="ワンピース, ミニドレス")
+    assert any(c.category == "subject" and set(c.values) == {"dress", "mini dress"} for c in conflicts)
+
+    conflicts2 = vocabulary.detect_tag_conflicts(free_text="ミニドレス, マキシドレス")
+    assert any(
+        c.category == "subject" and set(c.values) == {"mini dress", "maxi dress"} for c in conflicts2
+    )
+
+    conflicts3 = vocabulary.detect_tag_conflicts(free_text="ロングドレス, マキシドレス")
+    assert any(
+        c.category == "subject" and set(c.values) == {"long dress", "maxi dress"} for c in conflicts3
+    )
+
+
 # ── Prompt Composer / Auto の confirm_continue ゲート ────────────────────
 
 from nodes import NODE_CLASS_MAPPINGS  # noqa: E402
