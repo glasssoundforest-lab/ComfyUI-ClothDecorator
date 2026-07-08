@@ -181,8 +181,8 @@ output_language="ja" → "ワンピース, 赤, 刺繍, 花柄, シルク"
 `"[大項目 > 中項目] english_key | 日本語ラベル"` の形式でグルーピング表示され、
 項目数が多くても目的の装飾技法を探しやすくなっています。
 
-- **decoration_preset**（82種）: 大項目7 × 中項目2〜3の2階層分類
-- **pattern**（38種）/ **material**（33種）/ 伝統色（43種）/ **subject_hint**（42種）:
+- **decoration_preset**（200種）: 大項目8 × 中項目2〜3の2階層分類
+- **pattern**（200種）/ **material**（200種）/ 伝統色（203種）/ **subject_hint**（233種）:
   大項目のみの1階層分類
 
 ### decoration_preset の大項目・中項目一覧
@@ -196,20 +196,27 @@ output_language="ja" → "ワンピース, 赤, 刺繍, 花柄, シルク"
 | 金具・留め具 | ボタン・スタッズ / 編み上げ・留め構造 |
 | 加工・仕上げ効果 | 光沢・煌めき / 手仕事・アート / テクノロジー系 |
 | テーマ・スタイル装飾 | ゴシック・パンク / ブライダル・フォーマル / 民族衣装モチーフ |
+| アクティブウェア・機能技法 | 機能ディテール / 安全・視認性 |
+| 季節・イベントモチーフ | 花・植物モチーフ / 祝祭・イベント装飾 |
 
 ### pattern / material / 伝統色 / subject_hint の大項目
 
 | 辞書 | 大項目 |
 |---|---|
-| pattern | 幾何学柄 / 自然モチーフ柄 / 和柄 / 世界の織物柄 |
-| material | 天然繊維 / 和素材 / 化学繊維 / 特殊質感 |
+| pattern | 幾何学柄 / 自然モチーフ柄 / 和柄 / 世界の織物柄 / アートスタイル柄 / 時代スタイル柄 |
+| material | 天然繊維 / 和素材 / 化学繊維 / 皮革・毛皮 / 織り・特殊質感 / 世界の伝統素材 / モダン・工業素材 |
 | 伝統色 | 紅・赤系統 / 藍・青系統 / 緑系統 / 黄・橙系統 / 紫系統 / 白・黒・鼠系統 |
-| subject_hint | 和装 / 洋装フォーマル / 洋装カジュアル / アウター / 小物・その他 |
+| subject_hint | 和装 / 洋装フォーマル / 洋装カジュアル / アウター / 小物・その他 / 世界の民族衣装 / スポーツ・ワークウェア / コスチューム・ファンタジー衣装 |
 
-新しい項目を追加する際は、`nodes/vocabulary.py` の各辞書に本体（英語キー・
-プロンプト語・日本語ラベル）を追加した上で、`nodes/categories.py` の対応する
-`*_CATEGORY_OF` にキー→(大項目, 中項目) の割り当てを追加してください
-（`tests/test_categories.py` が未分類キーを検出します）。
+語彙データの実体は `nodes/decoration_data.py` / `nodes/pattern_data.py` /
+`nodes/material_data.py` / `nodes/color_data.py` / `nodes/subject_data.py`
+に「大項目・中項目でグループ化された生データ」として集約されています。
+`nodes/vocabulary.py` のフラット辞書（`DECORATION_PRESETS` 等）と
+`nodes/categories.py` のカテゴリ対応表（`DECORATION_CATEGORY_OF` 等）は
+どちらもこの同じ生データから自動的に構築されるため、新しい項目を
+追加する際は各 `*_data.py` に1件追記するだけで、語彙辞書とカテゴリ分類の
+両方に自動的に反映されます（手動で2箇所に書いてズレる、という事故が
+起きない設計です。`tests/test_categories.py` が万一の分類漏れも検出します）。
 
 ## 日本語対応
 
@@ -272,8 +279,9 @@ subject_hint=dress）:
 
 ## decoration_preset（🧵 Prompt Composer / 🧩 Auto）
 
-82種類のプリセットを収録（`nodes/vocabulary.py` の `DECORATION_PRESETS`）。
-上記の大項目・中項目カテゴリ一覧も参照してください。主なカテゴリ:
+200種類のプリセットを収録（`nodes/vocabulary.py` の `DECORATION_PRESETS`、
+実体は `nodes/decoration_data.py`）。上記の大項目・中項目カテゴリ一覧も
+参照してください。主なカテゴリ:
 
 - 基本装飾: `embroidery` / `lace_trim` / `sequins` / `beading` / `ribbon_bow` /
   `floral_applique` / `glitter` / `studs` / `printed_pattern` 等
@@ -294,8 +302,8 @@ subject_hint=dress）:
 - モダン: `laser_cut_pattern` / `led_light_trim`
 - `custom`（free_text のみで構成）
 
-同様に pattern（38種）・material（33種）・伝統色（43種）・subject_hint
-（42種）も拡充されています。プロジェクト固有の装飾語・色・柄・素材を
+同様に pattern（200種）・material（200種）・伝統色（203種）・subject_hint
+（233種）も拡充されています。プロジェクト固有の装飾語・色・柄・素材を
 追加したい場合はこのファイルの各辞書（`DECORATION_PRESETS` /
 `PATTERN_VOCAB` / `MATERIAL_VOCAB` / `TRADITIONAL_COLORS_JA` /
 `SUBJECT_HINT_JA_TO_EN`）と、対応する `*_LABELS_JA` を編集してください。

@@ -31,354 +31,63 @@ from dataclasses import dataclass, field
 # ═══════════════════════════════════════════════════════════════════
 # キー: UI（ComfyUIのドロップダウン）に出す短い識別子（英語・不変）
 # 値:   実際にプロンプトへ展開する語句（複数可、英語）
-DECORATION_PRESETS: dict[str, list[str]] = {
-    "none": [],
-    "embroidery": ["intricate embroidery", "embroidered pattern"],
-    "lace_trim": ["lace trim", "delicate lace edging"],
-    "sequins": ["sequined", "sparkling sequins"],
-    "beading": ["beaded detail", "hand-beaded"],
-    "ribbon_bow": ["ribbon bow accent", "satin ribbon"],
-    "floral_applique": ["floral applique", "fabric flower decoration"],
-    "gradient_dye": ["gradient dye", "ombre coloring"],
-    "tie_dye": ["tie-dye pattern"],
-    "patchwork": ["patchwork design", "mixed fabric patches"],
-    "glitter": ["glitter accents", "shimmering glitter"],
-    "holographic": ["holographic finish", "iridescent sheen"],
-    "metallic_foil": ["metallic foil print", "metallic accents"],
-    "fringe": ["fringe trim", "swaying fringe"],
-    "tassel": ["tassel details"],
-    "pearl_trim": ["pearl trim", "pearl embellishment"],
-    "jewel_encrusted": ["jewel-encrusted", "gemstone embellishments"],
-    "studs": ["metal studs", "studded detail"],
-    "printed_pattern": ["printed graphic pattern"],
-    # ★拡充分
-    "ribbon_embroidery": ["ribbon embroidery", "silk ribbon stitched pattern"],
-    "rhinestone": ["rhinestone embellishment", "sparkling rhinestones"],
-    "frill_ruffle": ["ruffled frill trim", "layered ruffles"],
-    "chain_trim": ["chain trim accent", "delicate metal chain detail"],
-    "feather_trim": ["feather trim", "soft feather accents"],
-    "hand_painted": ["hand-painted design", "artisanal hand-painted motif"],
-    "batik_dye": ["batik dye pattern", "wax-resist dye pattern"],
-    "indigo_dye": ["indigo dye pattern", "deep indigo dyed fabric, aizome style"],
-    "sashiko_stitch": ["sashiko stitching", "traditional Japanese running-stitch pattern"],
-    "kintsugi_seam": ["kintsugi-inspired gold seam", "gold-lined seam accent"],
-    "origami_applique": ["origami-fold applique", "paper-fold inspired fabric motif"],
-    "kamon_emblem": ["kamon-style emblem", "Japanese family crest motif"],
-    "bow_accent": ["decorative bow accent"],
-    "corset_lacing": ["corset-style lacing detail"],
-    # ★さらに拡充分（第2弾）
-    "crystal_beading": ["crystal beading", "hand-sewn crystal beadwork"],
-    "lace_overlay": ["lace overlay", "sheer lace layered over fabric"],
-    "velvet_trim": ["velvet trim accent", "plush velvet edging"],
-    "silk_flower": ["silk flower corsage", "fabric flower accent"],
-    "ornate_buttons": ["ornate decorative buttons", "engraved button details"],
-    "piping_trim": ["contrast piping trim"],
-    "quilted_pattern": ["quilted diamond stitching", "padded quilted texture"],
-    "drawstring_detail": ["drawstring gathering detail"],
-    "corset_boning": ["visible corset boning structure"],
-    "epaulette_trim": ["epaulette shoulder trim", "military-style shoulder detail"],
-    "brocade_trim": ["brocade trim accent", "woven brocade edging"],
-    "shibori_dye": ["shibori dye pattern", "traditional Japanese tie-dye texture"],
-    "yuzen_dye": ["yuzen dye artwork", "hand-painted Japanese silk dyeing"],
-    "katazome_stencil": ["katazome stencil-dyed pattern", "Japanese paste-resist stencil dyeing"],
-    # ★さらに拡充分（第3弾）
-    "pocket_square": ["folded pocket square accent"],
-    "cufflinks_detail": ["ornate cufflinks detail"],
-    "brass_buttons": ["polished brass buttons"],
-    "gothic_lace": ["gothic lace trim", "dark victorian lace detail"],
-    "cameo_brooch": ["cameo brooch accent"],
-    "bat_wing_applique": ["bat-wing applique", "gothic bat motif accent"],
-    "graffiti_print": ["graffiti-style print", "spray-paint graphic print"],
-    "distressed_denim": ["distressed denim texture", "frayed ripped denim detail"],
-    "safety_pin_accent": ["safety pin accents", "punk-style pin detail"],
-    "patch_badges": ["embroidered patch badges", "sew-on patch collection"],
-    "mesh_panel": ["sheer mesh panel insert"],
-    "reflective_strip": ["reflective strip trim", "high-visibility reflective accent"],
-    "bridal_veil_lace": ["bridal veil lace trim", "delicate wedding lace"],
-    "zari_embroidery": ["zari embroidery", "gold and silver metallic thread embroidery"],
-    "mirror_work": ["mirror work embellishment", "shisha embroidered mirrors"],
-    "block_print": ["hand block-printed pattern"],
-    "ikat_weave": ["ikat woven pattern", "resist-dyed ikat texture"],
-    "kente_pattern": ["kente cloth pattern", "West African woven pattern"],
-    "fair_isle_knit": ["fair isle knit pattern", "colorwork knit motif"],
-    "damask_weave": ["damask woven pattern", "reversible jacquard damask texture"],
-    "toile_print": ["toile de jouy print", "pastoral scenic print"],
-    "frog_buttons": ["Chinese frog button closures", "knotted frog fastenings"],
-    "laser_cut_pattern": ["laser-cut cutout pattern", "precision-cut fabric lacework"],
-    "led_light_trim": ["glowing LED light trim", "illuminated fiber-optic accent"],
-    # ★さらに拡充分（第5弾・大項目/中項目の手薄なカテゴリを補強）
-    "thermochromic_dye": ["thermochromic color-shifting dye", "heat-reactive color-changing fabric"],
-    "uv_reactive_print": ["UV-reactive print", "blacklight-glowing pattern"],
-    "3d_printed_lattice": ["3D-printed lattice texture", "generative lattice structure detail"],
-    "smart_fiber_circuitry": ["embedded smart-fiber circuitry", "e-textile circuit pattern"],
-    "spiked_leather_harness": ["spiked leather harness accent"],
-    "chain_harness_accent": ["chain harness accent", "layered chain body harness detail"],
-    "tiered_bridal_lace": ["tiered bridal lace layers", "cascading lace tiers"],
-    "ivory_satin_bow": ["ivory satin bow accent"],
-    "cathedral_train_lace": ["cathedral-length lace train detail"],
-    "huipil_embroidery": ["huipil-style embroidery", "Mesoamerican geometric embroidery"],
-    "shweshwe_print": ["shweshwe print", "South African indigo discharge-printed pattern"],
-    "hanbok_ribbon": ["hanbok goreum ribbon tie", "Korean traditional ribbon sash"],
-    "custom": [],  # free_text のみで構成
-}
-
-DECORATION_LABELS_JA: dict[str, str] = {
-    "none": "なし",
-    "embroidery": "刺繍",
-    "lace_trim": "レーストリム",
-    "sequins": "スパンコール",
-    "beading": "ビーズ装飾",
-    "ribbon_bow": "リボン",
-    "floral_applique": "花柄アップリケ",
-    "gradient_dye": "グラデーション染め",
-    "tie_dye": "タイダイ染め",
-    "patchwork": "パッチワーク",
-    "glitter": "グリッター",
-    "holographic": "ホログラム加工",
-    "metallic_foil": "箔プリント",
-    "fringe": "フリンジ",
-    "tassel": "タッセル",
-    "pearl_trim": "パールトリム",
-    "jewel_encrusted": "宝石装飾",
-    "studs": "スタッズ",
-    "printed_pattern": "プリント柄",
-    "ribbon_embroidery": "リボン刺繍",
-    "rhinestone": "ラインストーン",
-    "frill_ruffle": "フリル",
-    "chain_trim": "チェーン装飾",
-    "feather_trim": "フェザートリム",
-    "hand_painted": "手描きペイント",
-    "batik_dye": "バティック染め",
-    "indigo_dye": "藍染め",
-    "sashiko_stitch": "刺し子",
-    "kintsugi_seam": "金継ぎ風ステッチ",
-    "origami_applique": "折り紙モチーフ",
-    "kamon_emblem": "家紋風エンブレム",
-    "bow_accent": "ボウタイ・蝶結び",
-    "corset_lacing": "コルセットレース編み上げ",
-    "crystal_beading": "クリスタルビーズ刺繍",
-    "lace_overlay": "レースオーバーレイ",
-    "velvet_trim": "ベルベットトリム",
-    "silk_flower": "布花コサージュ",
-    "ornate_buttons": "装飾ボタン",
-    "piping_trim": "パイピング",
-    "quilted_pattern": "キルティング",
-    "drawstring_detail": "ドローストリング（絞り紐）",
-    "corset_boning": "コルセットボーニング",
-    "epaulette_trim": "エポレット（肩章）",
-    "brocade_trim": "ブロケードトリム",
-    "shibori_dye": "絞り染め",
-    "yuzen_dye": "友禅染め",
-    "katazome_stencil": "型染め",
-    "pocket_square": "ポケットチーフ",
-    "cufflinks_detail": "カフスボタン",
-    "brass_buttons": "真鍮ボタン",
-    "gothic_lace": "ゴシックレース",
-    "cameo_brooch": "カメオブローチ",
-    "bat_wing_applique": "コウモリ翼アップリケ",
-    "graffiti_print": "グラフィティプリント",
-    "distressed_denim": "ダメージデニム加工",
-    "safety_pin_accent": "セーフティピン装飾",
-    "patch_badges": "ワッペン・パッチ",
-    "mesh_panel": "メッシュ切替",
-    "reflective_strip": "反射材トリム",
-    "bridal_veil_lace": "ブライダルベールレース",
-    "zari_embroidery": "ザリ刺繍（金銀糸刺繍）",
-    "mirror_work": "ミラーワーク刺繍",
-    "block_print": "ブロックプリント",
-    "ikat_weave": "イカット織り",
-    "kente_pattern": "ケンテ織り柄",
-    "fair_isle_knit": "フェアアイル編み柄",
-    "damask_weave": "ダマスク織り",
-    "toile_print": "トワル・ド・ジュイ柄",
-    "frog_buttons": "チャイナボタン（組み紐留め）",
-    "laser_cut_pattern": "レーザーカット柄",
-    "led_light_trim": "LEDライトトリム",
-    "thermochromic_dye": "感温変色染め",
-    "uv_reactive_print": "UV反応プリント",
-    "3d_printed_lattice": "3Dプリントラティス",
-    "smart_fiber_circuitry": "スマートファイバー回路装飾",
-    "spiked_leather_harness": "スパイクレザーハーネス",
-    "chain_harness_accent": "チェーンハーネス",
-    "tiered_bridal_lace": "ティアードブライダルレース",
-    "ivory_satin_bow": "アイボリーサテンボウ",
-    "cathedral_train_lace": "カテドラルトレーンレース",
-    "huipil_embroidery": "ウイピル刺繍",
-    "shweshwe_print": "シュエシュエプリント",
-    "hanbok_ribbon": "韓服（ハンボク）ゴルム",
-    "custom": "自由入力",
-}
+from . import color_data, decoration_data, material_data, pattern_data, subject_data
 
 # ═══════════════════════════════════════════════════════════════════
-# 柄・模様（pattern）語彙
+# 装飾技法プリセット（decoration_preset）
 # ═══════════════════════════════════════════════════════════════════
-PATTERN_VOCAB: dict[str, str] = {
-    "none": "",
-    "striped": "striped pattern",
-    "polka_dot": "polka dot pattern",
-    "floral": "floral pattern",
-    "plaid": "plaid pattern",
-    "checkered": "checkered pattern",
-    "geometric": "geometric pattern",
-    "animal_print": "animal print pattern",
-    "camouflage": "camouflage pattern",
-    "paisley": "paisley pattern",
-    "houndstooth": "houndstooth pattern",
-    # ★和柄（wagara）
-    "seigaiha": "seigaiha, Japanese blue wave pattern",
-    "asanoha": "asanoha, Japanese hemp-leaf geometric pattern",
-    "ichimatsu": "ichimatsu, Japanese checkerboard pattern",
-    "karakusa": "karakusa, Japanese arabesque vine pattern",
-    "sakura_pattern": "sakura cherry blossom pattern",
-    "kikkou": "kikkou, Japanese tortoiseshell hexagon pattern",
-    "shippou": "shippou, Japanese interlocking circles pattern",
-    "raimon": "raimon, Japanese thunder/key-fret pattern",
-    "uroko": "uroko, Japanese triangular scale pattern",
-    "tatewaku": "tatewaku, Japanese rising vapor stripe pattern",
-    "sayagata": "sayagata, Japanese interlocking key-fret pattern",
-    "kagome": "kagome, Japanese woven basket-weave star pattern",
-    "matsukawabishi": "matsukawabishi, Japanese pine-bark diamond pattern",
-    "yagasuri": "yagasuri, Japanese arrow-feather pattern",
-    "hishi": "hishi, Japanese diamond lattice pattern",
-    "kumo": "kumo, Japanese stylized cloud pattern",
-    # ★世界の伝統柄
-    "damask": "damask pattern",
-    "toile": "toile de jouy pattern",
-    "ikat": "ikat pattern",
-    "kente": "kente cloth pattern",
-    "fair_isle": "fair isle pattern",
-    "tartan": "tartan pattern",
-    "arabesque_tile": "arabesque geometric tile pattern",
-    "mandala": "mandala pattern",
-    "gingham": "gingham check pattern",
-    "chevron": "chevron zigzag pattern",
-    "herringbone": "herringbone weave pattern",
-    "ogee": "ogee pattern, Persian/Islamic curved lattice motif",
-    "custom": "",
-}
+# 実体データは nodes/decoration_data.py（大項目・中項目でグループ化）に
+# 集約されており、ここではそれを展開してフラットな辞書を作るだけ。
+# categories.py 側もこの同じ decoration_data モジュールから
+# 大項目/中項目の対応表を作るため、二重管理によるズレが発生しない。
 
-PATTERN_LABELS_JA: dict[str, str] = {
-    "none": "なし",
-    "striped": "ストライプ",
-    "polka_dot": "水玉",
-    "floral": "花柄",
-    "plaid": "タータンチェック",
-    "checkered": "チェック柄",
-    "geometric": "幾何学模様",
-    "animal_print": "アニマル柄",
-    "camouflage": "迷彩柄",
-    "paisley": "ペイズリー柄",
-    "houndstooth": "千鳥格子",
-    "seigaiha": "青海波",
-    "asanoha": "麻の葉",
-    "ichimatsu": "市松模様",
-    "karakusa": "唐草模様",
-    "sakura_pattern": "桜柄",
-    "kikkou": "亀甲柄",
-    "shippou": "七宝柄",
-    "raimon": "雷紋",
-    "uroko": "鱗文様",
-    "tatewaku": "立涌",
-    "sayagata": "紗綾形",
-    "kagome": "籠目",
-    "matsukawabishi": "松皮菱",
-    "yagasuri": "矢絣",
-    "hishi": "菱文様",
-    "kumo": "雲文様",
-    "damask": "ダマスク柄",
-    "toile": "トワル・ド・ジュイ柄",
-    "ikat": "絣（イカット）柄",
-    "kente": "ケンテ柄",
-    "fair_isle": "フェアアイル柄",
-    "tartan": "タータン柄",
-    "arabesque_tile": "アラベスク幾何学タイル柄",
-    "mandala": "曼荼羅柄",
-    "gingham": "ギンガムチェック",
-    "chevron": "シェブロン柄",
-    "herringbone": "ヘリンボーン柄",
-    "ogee": "オジー柄（ペルシャ格子）",
-    "custom": "自由入力",
-}
+
+def _build_decoration_vocab() -> tuple[dict[str, list[str]], dict[str, str]]:
+    presets: dict[str, list[str]] = {"none": [], "custom": []}
+    labels_ja: dict[str, str] = {"none": "なし", "custom": "自由入力"}
+    for _major, _major_ja, mids in decoration_data.DECORATION_GROUPS:
+        for _mid, _mid_ja, entries in mids:
+            for key, phrases, ja in entries:
+                presets[key] = phrases
+                labels_ja[key] = ja
+    return presets, labels_ja
+
+
+DECORATION_PRESETS, DECORATION_LABELS_JA = _build_decoration_vocab()
+
+# ═══════════════════════════════════════════════════════════════════
+# 柄（pattern）語彙
+# ═══════════════════════════════════════════════════════════════════
+
+
+def _build_pattern_vocab() -> tuple[dict[str, str], dict[str, str]]:
+    vocab: dict[str, str] = {"none": "", "custom": ""}
+    labels_ja: dict[str, str] = {"none": "なし", "custom": "自由入力"}
+    for _major, _major_ja, entries in pattern_data.PATTERN_GROUPS:
+        for key, phrase, ja in entries:
+            vocab[key] = phrase
+            labels_ja[key] = ja
+    return vocab, labels_ja
+
+
+PATTERN_VOCAB, PATTERN_LABELS_JA = _build_pattern_vocab()
 
 # ═══════════════════════════════════════════════════════════════════
 # 素材・質感（material）語彙
 # ═══════════════════════════════════════════════════════════════════
-MATERIAL_VOCAB: dict[str, str] = {
-    "none": "",
-    "silk": "silk fabric",
-    "leather": "leather texture",
-    "denim": "denim fabric",
-    "velvet": "velvet texture",
-    "satin": "satin sheen",
-    "lace": "lace fabric",
-    "wool": "wool texture",
-    "cotton": "cotton fabric",
-    "chiffon": "sheer chiffon",
-    "vinyl": "glossy vinyl",
-    # ★和素材
-    "washi": "washi paper texture, Japanese paper fabric",
-    "chirimen": "chirimen, Japanese silk crepe texture",
-    "kinran": "kinran, gold brocade fabric",
-    "nishijin_ori": "nishijin-ori, Japanese woven brocade texture",
-    "tsumugi": "tsumugi, Japanese hand-woven pongee silk texture",
-    "hemp_asa": "asa, Japanese hemp fabric texture",
-    "ramie": "ramie fabric texture",
-    "nishiki_brocade": "nishiki, Japanese luxury brocade texture",
-    "habutai": "habutai, smooth plain-weave silk texture",
-    "rayon": "rayon fabric",
-    "polyester": "polyester fabric",
-    "organza": "sheer organza fabric",
-    "tulle": "tulle netting fabric",
-    "brocade_western": "brocade fabric texture",
-    "tweed": "tweed fabric texture",
-    "corduroy": "corduroy ribbed texture",
-    "faux_fur": "faux fur texture",
-    "neoprene": "neoprene fabric texture",
-    "mesh_fabric": "sheer mesh fabric",
-    "cashmere": "cashmere fabric",
-    "angora": "angora wool texture",
-    "spandex_lycra": "stretch spandex/lycra fabric",
-    "pu_leather": "PU faux leather texture",
-    "custom": "",
-}
 
-MATERIAL_LABELS_JA: dict[str, str] = {
-    "none": "なし",
-    "silk": "シルク",
-    "leather": "レザー",
-    "denim": "デニム",
-    "velvet": "ベルベット",
-    "satin": "サテン",
-    "lace": "レース",
-    "wool": "ウール",
-    "cotton": "コットン",
-    "chiffon": "シフォン",
-    "vinyl": "ビニール（光沢）",
-    "washi": "和紙",
-    "chirimen": "ちりめん",
-    "kinran": "金襴",
-    "nishijin_ori": "西陣織",
-    "tsumugi": "紬",
-    "hemp_asa": "麻",
-    "ramie": "苧麻（ラミー）",
-    "nishiki_brocade": "錦",
-    "habutai": "羽二重",
-    "rayon": "レーヨン",
-    "polyester": "ポリエステル",
-    "organza": "オーガンジー",
-    "tulle": "チュール",
-    "brocade_western": "ブロケード",
-    "tweed": "ツイード",
-    "corduroy": "コーデュロイ",
-    "faux_fur": "フェイクファー",
-    "neoprene": "ネオプレン",
-    "mesh_fabric": "メッシュ生地",
-    "cashmere": "カシミヤ",
-    "angora": "アンゴラ",
-    "spandex_lycra": "スパンデックス（ライクラ）",
-    "pu_leather": "合成皮革（PUレザー）",
-    "custom": "自由入力",
-}
+
+def _build_material_vocab() -> tuple[dict[str, str], dict[str, str]]:
+    vocab: dict[str, str] = {"none": "", "custom": ""}
+    labels_ja: dict[str, str] = {"none": "なし", "custom": "自由入力"}
+    for _major, _major_ja, entries in material_data.MATERIAL_GROUPS:
+        for key, phrase, ja in entries:
+            vocab[key] = phrase
+            labels_ja[key] = ja
+    return vocab, labels_ja
+
+
+MATERIAL_VOCAB, MATERIAL_LABELS_JA = _build_material_vocab()
 
 # ═══════════════════════════════════════════════════════════════════
 # 色
@@ -453,99 +162,32 @@ BASE_COLOR_EN_TO_JA: dict[str, str] = {
     "teal": "ティール",
 }
 
-# 日本の伝統色名 → (ローマ字読み, CLIPプロンプト向け英語表現, 16進カラーコード)
+
+# 日本の伝統色名 → {ローマ字読み, CLIPプロンプト向け英語表現, 16進カラーコード}
 # color フィールドに「藍色」「ai-iro」のいずれを入力しても解決できるようにする。
-TRADITIONAL_COLORS_JA: dict[str, dict[str, str]] = {
-    "藍色": {"romaji": "ai-iro", "en": "deep indigo blue", "hex": "#1e50a2"},
-    "茜色": {"romaji": "akane-iro", "en": "madder red", "hex": "#b7282e"},
-    "山吹色": {"romaji": "yamabuki-iro", "en": "golden yellow", "hex": "#f8b500"},
-    "若草色": {"romaji": "wakakusa-iro", "en": "young grass green", "hex": "#c3d825"},
-    "桜色": {"romaji": "sakura-iro", "en": "pale cherry blossom pink", "hex": "#fef4f4"},
-    "藤色": {"romaji": "fuji-iro", "en": "wisteria purple", "hex": "#bbaee0"},
-    "鴇色": {"romaji": "toki-iro", "en": "pale ibis pink", "hex": "#f2a0a1"},
-    "群青色": {"romaji": "gunjou-iro", "en": "ultramarine blue", "hex": "#4c6cb3"},
-    "朱色": {"romaji": "shu-iro", "en": "vermillion red-orange", "hex": "#eb6238"},
-    "抹茶色": {"romaji": "matcha-iro", "en": "matcha green", "hex": "#c5b358"},
-    "紅色": {"romaji": "beni-iro", "en": "crimson red", "hex": "#cf3721"},
-    "黄金色": {"romaji": "koganeiro", "en": "golden", "hex": "#e8b902"},
-    "深緑": {"romaji": "fukamidori", "en": "deep forest green", "hex": "#00553e"},
-    "白銀": {"romaji": "shirogane", "en": "silver white", "hex": "#c8c8cb"},
-    "漆黒": {"romaji": "shikkoku", "en": "lacquer black", "hex": "#0e0e10"},
-    "浅葱色": {"romaji": "asagi-iro", "en": "light blue-green", "hex": "#00a3af"},
-    "紫紺": {"romaji": "shikon", "en": "deep bluish purple", "hex": "#460e44"},
-    "生成り": {"romaji": "kinari", "en": "undyed off-white", "hex": "#f8f4e6"},
-    "瑠璃色": {"romaji": "ruri-iro", "en": "lapis lazuli blue", "hex": "#1e50a2"},
-    "萌黄色": {"romaji": "moegi-iro", "en": "fresh yellow-green", "hex": "#aacf53"},
-    "紅梅色": {"romaji": "koubai-iro", "en": "plum blossom pink", "hex": "#e7609e"},
-    "檜皮色": {"romaji": "hihada-iro", "en": "cypress bark brown", "hex": "#78384f"},
-    "空色": {"romaji": "sora-iro", "en": "sky blue", "hex": "#8fd8d2"},
-    "烏羽色": {"romaji": "karasuba-iro", "en": "raven black with blue sheen", "hex": "#211c1c"},
-    "蘇芳": {"romaji": "suou", "en": "dark red-purple", "hex": "#9e3d3f"},
-    "芥子色": {"romaji": "karashi-iro", "en": "mustard yellow", "hex": "#d6a418"},
-    "東雲色": {"romaji": "shinonome-iro", "en": "dawn pink", "hex": "#f19072"},
-    "常磐色": {"romaji": "tokiwa-iro", "en": "evergreen", "hex": "#007b43"},
-    "撫子色": {"romaji": "nadeshiko-iro", "en": "soft pink carnation", "hex": "#ee9ca7"},
-    "若竹色": {"romaji": "wakatake-iro", "en": "young bamboo green", "hex": "#68be8d"},
-    "卯の花色": {"romaji": "unohana-iro", "en": "deutzia flower white", "hex": "#f5f2e9"},
-    "千歳緑": {"romaji": "chitose-midori", "en": "ancient pine deep green", "hex": "#38534d"},
-    "蒲公英色": {"romaji": "tanpopo-iro", "en": "dandelion yellow", "hex": "#fac03d"},
-    "瓶覗": {"romaji": "kamenozoki", "en": "faint pale blue", "hex": "#a8d8ea"},
-    "灰桜": {"romaji": "haizakura", "en": "ash-gray cherry pink", "hex": "#e8d3d1"},
-    "銀鼠": {"romaji": "gin-nezu", "en": "silver gray", "hex": "#91989f"},
-    "江戸紫": {"romaji": "edo-murasaki", "en": "edo purple", "hex": "#745399"},
-    "桔梗色": {"romaji": "kikyou-iro", "en": "bellflower purple-blue", "hex": "#4c6cb3"},
-    "桃色": {"romaji": "momo-iro", "en": "peach pink", "hex": "#f7b8ac"},
-    "鉄紺": {"romaji": "tekkon", "en": "dark iron navy", "hex": "#16264c"},
-    "柿色": {"romaji": "kaki-iro", "en": "persimmon orange", "hex": "#ed6d3d"},
-    "若苗色": {"romaji": "wakanae-iro", "en": "young rice-seedling green", "hex": "#a8cb17"},
-    "京紫": {"romaji": "kyo-murasaki", "en": "Kyoto reddish purple", "hex": "#8b3a7c"},
-}
+# 実体データは nodes/color_data.py（色系統でグループ化）に集約されている。
+def _build_traditional_colors() -> dict[str, dict[str, str]]:
+    colors: dict[str, dict[str, str]] = {}
+    for _family, _family_ja, entries in color_data.COLOR_GROUPS:
+        for kanji, romaji, en, hex_code in entries:
+            colors[kanji] = {"romaji": romaji, "en": en, "hex": hex_code}
+    return colors
+
+
+TRADITIONAL_COLORS_JA: dict[str, dict[str, str]] = _build_traditional_colors()
+
 
 # ── 服飾対象語（subject_hint）日本語→英語 ─────────────────────────────
-SUBJECT_HINT_JA_TO_EN: dict[str, str] = {
-    "服": "clothing",
-    "衣服": "clothing",
-    "ドレス": "dress",
-    "ワンピース": "dress",
-    "ジャケット": "jacket",
-    "コート": "coat",
-    "スカート": "skirt",
-    "パンツ": "pants",
-    "ズボン": "pants",
-    "シャツ": "shirt",
-    "ブラウス": "blouse",
-    "セーター": "sweater",
-    "パーカー": "hoodie",
-    "制服": "uniform",
-    "水着": "swimsuit",
-    "着物": "kimono",
-    "浴衣": "yukata",
-    "帯": "obi",
-    "靴": "shoes",
-    "帽子": "hat",
-    "手袋": "gloves",
-    "バッグ": "bag",
-    "スカーフ": "scarf",
-    "マフラー": "scarf",
-    "羽織": "haori",
-    "袴": "hakama",
-    "甚平": "jinbei",
-    "ベスト": "vest",
-    "タキシード": "tuxedo",
-    "チャイナドレス": "cheongsam",
-    "エプロン": "apron",
-    "レインコート": "raincoat",
-    "ケープ": "cape",
-    "ボレロ": "bolero jacket",
-    "サロペット": "overalls",
-    "喪服": "mourning dress",
-    "花嫁衣装": "wedding dress",
-    "軍服": "military uniform",
-    "白衣": "lab coat",
-    "スーツ": "suit",
-    "ドレスシャツ": "dress shirt",
-    "マント": "mantle cloak",
-}
+# 実体データは nodes/subject_data.py（大項目でグループ化）に集約されている。
+def _build_subject_hints() -> dict[str, str]:
+    hints: dict[str, str] = {}
+    for _major, _major_ja, entries in subject_data.SUBJECT_GROUPS:
+        for ja, en in entries:
+            hints[ja] = en
+    return hints
+
+
+SUBJECT_HINT_JA_TO_EN: dict[str, str] = _build_subject_hints()
 
 # SUBJECT_HINT_JA_TO_EN の逆引き（英語→日本語）。output_language="ja" 時に、
 # ユーザーが英語で subject_hint を入力した場合でも日本語表現へ変換するために使う。
