@@ -119,13 +119,23 @@ def test_compound_japanese_sentence_still_not_falsely_flagged():
 
 
 def test_dress_and_skirt_detected_as_subject_conflict_when_using_dictionary_terms():
-    """辞書に完全一致する語（"スカート"）を使えば、ワンピースとの対象語衝突は検出される。
-    一方、辞書に無い変化形（"ロングスカート"）は検出対象外という既知の制約も確認する。"""
+    """辞書に完全一致する語（"スカート"）を使えば、ワンピースとの対象語衝突は検出される。"""
     conflicts_matched = vocabulary.detect_tag_conflicts(free_text="ワンピース, スカート")
     assert any(c.category == "subject" and set(c.values) == {"dress", "skirt"} for c in conflicts_matched)
 
-    conflicts_unmatched = vocabulary.detect_tag_conflicts(free_text="ワンピース, ロングスカート")
-    assert not any(c.category == "subject" for c in conflicts_unmatched)
+
+def test_skirt_length_variants_are_registered_and_conflict_with_each_other():
+    """
+    「ミニスカート」「マキシスカート」「ロングスカート」等の丈違いスカートは、
+    それぞれ別の服として区別され、互いに衝突として検知される（意図的な仕様）。
+    """
+    conflicts = vocabulary.detect_tag_conflicts(free_text="ロングスカート, スカート")
+    assert any(c.category == "subject" and set(c.values) == {"long skirt", "skirt"} for c in conflicts)
+
+    conflicts2 = vocabulary.detect_tag_conflicts(free_text="ロングスカート, ミニスカート")
+    assert any(
+        c.category == "subject" and set(c.values) == {"long skirt", "mini skirt"} for c in conflicts2
+    )
 
 
 # ── Prompt Composer / Auto の confirm_continue ゲート ────────────────────

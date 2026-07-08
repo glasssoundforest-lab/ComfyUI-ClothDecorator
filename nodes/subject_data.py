@@ -110,6 +110,7 @@ SUBJECT_GROUPS: list[SubjectGroup] = [
             ("マキシスカート", "maxi skirt"),
             ("ミニスカート", "mini skirt"),
             ("タイトスカート", "pencil skirt"),
+            ("ロングスカート", "long skirt"),
             ("オーバーオール", "dungarees"),
             ("スウェットシャツ", "sweatshirt"),
             ("スウェットパンツ", "sweatpants"),
