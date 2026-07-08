@@ -1,0 +1,31 @@
+Add image-analysis-based decoration suggestion + selectable output language (en/ja)
+
+Image analysis extension (nodes/image_analyzer.py):
+- New node: Image Analyzer (color_only + http_tagger analysis_source modes)
+- color_only (always available, no external deps): lightweight numpy-only
+  k-means color clustering (nodes/color_analysis.py) extracts dominant
+  colors from the masked region and matches them against our vocabulary's
+  named colors (Japanese traditional colors + BASE_COLORS), producing
+  suggested_color_en/suggested_color_ja + a color preview swatch image
+- http_tagger (opt-in, BYO server): sends the masked crop as base64 PNG to
+  a user-supplied tagger_url via stdlib urllib, expects a WD14-style
+  {"tags": [{"tag":..., "score":...}]} response, maps tags to
+  decoration_preset/pattern/material candidates via keyword-overlap
+  scoring (nodes/tag_mapping.py). Falls back gracefully to color_only
+  results if the request fails.
+- Prompt Composer and Auto gain decoration_preset_override /
+  pattern_override / material_override STRING inputs (override > dropdown)
+  so Image Analyzer's suggestions can be wired directly in
+
+Output language selection (en/ja):
+- vocabulary.py: added BASE_COLOR_HEX, BASE_COLOR_EN_TO_JA,
+  SUBJECT_HINT_EN_TO_JA (reverse map), DEFAULT_NEGATIVE_TERMS_JA
+- new resolve_color_bilingual() / resolve_subject_bilingual() helpers
+- build_decoration_prompt(output_language="en"|"ja"): builds
+  prompt/merged_prompt/negative_prompt using Japanese vocabulary labels,
+  traditional color names, and translated negative terms when "ja"
+- Prompt Composer and Auto gain an output_language dropdown, also applied
+  to model_prompt generation
+
+32 new unit tests (131 total, all passing), including an HTTP round-trip
+test against a local mock tagger server. Bumped to v0.6.0.

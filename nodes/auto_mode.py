@@ -88,6 +88,10 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                 ),
                 "opacity": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.05}),
                 "feather_px": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 100.0, "step": 0.5}),
+                "output_language": (
+                    ["en", "ja"],
+                    {"default": "en", "tooltip": "mode=generative_prompt のときプロンプトを英語/日本語どちらで組み立てるか"},
+                ),
             },
             "optional": {
                 "color_b": ("STRING", {"default": "#f1c40f"}),
@@ -115,6 +119,12 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
                 "subject_hint": ("STRING", {"default": "clothing"}),
                 "base_prompt": ("STRING", {"multiline": True, "default": "", "forceInput": True}),
                 "grow_px": ("INT", {"default": 8, "min": 0, "max": 200}),
+                "decoration_preset_override": (
+                    "STRING",
+                    {"default": "", "forceInput": True, "tooltip": "🔍 Image Analyzer の提案を接続する用途"},
+                ),
+                "pattern_override": ("STRING", {"default": "", "forceInput": True}),
+                "material_override": ("STRING", {"default": "", "forceInput": True}),
             },
         }
 
@@ -129,6 +139,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         color: str,
         opacity: float,
         feather_px: float,
+        output_language: str = "en",
         color_b: str = "#f1c40f",
         pattern_image: Any = None,
         texture_image: Any = None,
@@ -138,11 +149,21 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
         subject_hint: str = "clothing",
         base_prompt: str = "",
         grow_px: int = 8,
+        decoration_preset_override: str = "",
+        pattern_override: str = "",
+        material_override: str = "",
     ) -> tuple[Any, str, str, str, str, str, Any, str]:
         mask_np = mask_to_numpy(mask)
         decoration_preset = categories.resolve_grouped_key(decoration_preset)
         pattern = categories.resolve_grouped_key(pattern)
         material = categories.resolve_grouped_key(material)
+
+        if decoration_preset_override.strip():
+            decoration_preset = categories.resolve_grouped_key(decoration_preset_override.strip())
+        if pattern_override.strip():
+            pattern = categories.resolve_grouped_key(pattern_override.strip())
+        if material_override.strip():
+            material = categories.resolve_grouped_key(material_override.strip())
 
         if mode == "direct_paint":
             img_np = tensor_to_numpy_uint8(image)
@@ -191,6 +212,7 @@ class ClothDecoratorAutoNode(ClothDecoratorNodeBase):
             free_text=free_text,
             subject_hint=subject_hint,
             base_prompt=base_prompt,
+            output_language=output_language,
         )
 
         model_key = target_model.split(" | ", 1)[0].strip()

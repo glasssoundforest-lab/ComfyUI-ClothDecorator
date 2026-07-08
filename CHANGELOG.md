@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## v0.6.0
+- **画像解析による装飾の自動提案機能を新設**（従来の「語彙から選ぶ」方式に加え、
+  「画像から読み取って提案する」経路を追加）:
+  - 新規ノード 🔍 **Image Analyzer**（`nodes/image_analyzer.py`）
+  - `color_only`: 軽量k-means（`nodes/color_analysis.py`、numpyのみ・外部依存
+    なし）でマスク領域の代表色を抽出し、日本の伝統色/BASE_COLORSの中から
+    最寄り色を提案（`suggested_color_en` / `suggested_color_ja` / 色プレビュー画像）
+  - `http_tagger`: 自前のWD14/Florence2系タガーHTTPサーバーと連携し、
+    返ってきたタグを `nodes/tag_mapping.py` のキーワード一致マッピングで
+    decoration_preset/pattern/material候補へ変換。通信失敗時はcolor_only
+    の結果のみで継続（処理を止めない）
+  - 🧵 Prompt Composer / 🧩 Auto に `decoration_preset_override` /
+    `pattern_override` / `material_override`（STRING、優先度: override >
+    ドロップダウン）を追加し、Image Analyzer の提案をそのまま接続可能に
+- **出力言語（英語/日本語）を選択できるように**:
+  - `nodes/vocabulary.py`: `BASE_COLOR_HEX` / `BASE_COLOR_EN_TO_JA` /
+    `SUBJECT_HINT_EN_TO_JA`（逆引き）/ `DEFAULT_NEGATIVE_TERMS_JA` を追加
+  - `resolve_color_bilingual()` / `resolve_subject_bilingual()` を新設
+  - `build_decoration_prompt(output_language="en"|"ja")`:
+    "ja" 指定で prompt/merged_prompt/negative_prompt を日本語語彙
+    （各キーの日本語ラベル・伝統色名・和訳ネガティブ語）で組み立てる
+  - 🧵 Prompt Composer / 🧩 Auto に `output_language` ドロップダウンを追加
+    （`model_prompt` にも反映。target_modelのquality/negativeタグ英語慣習と
+    混在する点はREADMEに明記）
+- 単体テスト 99 → 131件（全通過。色解析/タグマッピング/画像アナライザ
+  ノード統合/出力言語の各テストを追加）
+
 ## v0.5.0
 - **大項目・中項目カテゴリ分類を新設**（`nodes/categories.py`）:
   - decoration_preset: 大項目7（刺繍・ビーズ手芸／トリム・縁飾り／染色・

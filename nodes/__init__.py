@@ -30,6 +30,7 @@ ClothPromptComposerNode = _safe("prompt_composer", "ClothPromptComposerNode")
 ClothDirectPaintNode = _safe("direct_paint", "ClothDirectPaintNode")
 ClothDecoratorAutoNode = _safe("auto_mode", "ClothDecoratorAutoNode")
 ClothPromptModelAdapterNode = _safe("model_adapter", "ClothPromptModelAdapterNode")
+ClothImageAnalyzerNode = _safe("image_analyzer", "ClothImageAnalyzerNode")
 
 _all = {
     "ClothMaskPrep": ClothMaskPrepNode,
@@ -39,6 +40,7 @@ _all = {
     "ClothDirectPaint": ClothDirectPaintNode,
     "ClothDecoratorAuto": ClothDecoratorAutoNode,
     "ClothPromptModelAdapter": ClothPromptModelAdapterNode,
+    "ClothImageAnalyzer": ClothImageAnalyzerNode,
 }
 
 NODE_CLASS_MAPPINGS = {k: v for k, v in _all.items() if v is not None}
@@ -51,6 +53,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ClothDirectPaint": "🎨 Cloth Decorator - Direct Paint",
     "ClothDecoratorAuto": "🧩 Cloth Decorator - Auto",
     "ClothPromptModelAdapter": "🧠 Cloth Decorator - Model Prompt Adapter",
+    "ClothImageAnalyzer": "🔍 Cloth Decorator - Image Analyzer",
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     k: v for k, v in NODE_DISPLAY_NAME_MAPPINGS.items() if k in NODE_CLASS_MAPPINGS

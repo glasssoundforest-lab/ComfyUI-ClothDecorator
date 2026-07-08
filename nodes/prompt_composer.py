@@ -81,6 +81,16 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
                         "tooltip": "model_prompt/model_negative_prompt の書式を合わせる対象モデル系統",
                     },
                 ),
+                "output_language": (
+                    ["en", "ja"],
+                    {
+                        "default": "en",
+                        "tooltip": (
+                            "prompt/merged_prompt/model_prompt を英語(en)か日本語(ja)で組み立てるか。"
+                            "free_text/base_prompt は自動翻訳されない。"
+                        ),
+                    },
+                ),
                 "subject_hint": (
                     "STRING",
                     {
@@ -127,6 +137,33 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
                     "STRING",
                     {"default": "", "tooltip": "追加のネガティブプロンプト（カンマ区切り）"},
                 ),
+                "decoration_preset_override": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "forceInput": True,
+                        "tooltip": (
+                            "指定するとdecoration_presetドロップダウンより優先される。"
+                            "🔍 Image Analyzer の suggested_decoration_preset を接続する用途。"
+                        ),
+                    },
+                ),
+                "pattern_override": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "forceInput": True,
+                        "tooltip": "指定するとpatternドロップダウンより優先される（🔍 Image Analyzer 用）。",
+                    },
+                ),
+                "material_override": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "forceInput": True,
+                        "tooltip": "指定するとmaterialドロップダウンより優先される（🔍 Image Analyzer 用）。",
+                    },
+                ),
             },
         }
 
@@ -137,6 +174,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         pattern: str,
         material: str,
         target_model: str,
+        output_language: str,
         subject_hint: str,
         grow_px: int,
         feather_px: float,
@@ -144,10 +182,20 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         free_text: str = "",
         base_prompt: str = "",
         negative_extra: str = "",
+        decoration_preset_override: str = "",
+        pattern_override: str = "",
+        material_override: str = "",
     ) -> tuple[str, str, str, str, str, Any, str]:
         decoration_preset = categories.resolve_grouped_key(decoration_preset)
         pattern = categories.resolve_grouped_key(pattern)
         material = categories.resolve_grouped_key(material)
+
+        if decoration_preset_override.strip():
+            decoration_preset = categories.resolve_grouped_key(decoration_preset_override.strip())
+        if pattern_override.strip():
+            pattern = categories.resolve_grouped_key(pattern_override.strip())
+        if material_override.strip():
+            material = categories.resolve_grouped_key(material_override.strip())
 
         result = vocabulary.build_decoration_prompt(
             decoration_preset=decoration_preset,
@@ -158,6 +206,7 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
             subject_hint=subject_hint,
             base_prompt=base_prompt,
             negative_extra=negative_extra,
+            output_language=output_language,
         )
 
         model_key = target_model.split(" | ", 1)[0].strip()
@@ -182,6 +231,12 @@ class ClothPromptComposerNode(ClothDecoratorNodeBase):
         debug["raw_material"] = material
         debug["target_model"] = model_key
         debug["prompt_style_used"] = style_used
+        debug["output_language"] = output_language
+        debug["overrides_applied"] = {
+            "decoration_preset": bool(decoration_preset_override.strip()),
+            "pattern": bool(pattern_override.strip()),
+            "material": bool(material_override.strip()),
+        }
 
         return (
             result.inpaint_prompt,
