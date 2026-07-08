@@ -96,6 +96,38 @@ def test_categorize_term_compound_phrase_is_other_not_color():
     assert vocabulary.categorize_term("red") == "color"  # 単独タグは引き続き検出される
 
 
+# ── 一般的な日本語の色名（黄色・黒など）の認識 ───────────────────────────
+
+def test_generic_japanese_base_color_words_are_recognized():
+    """「黄色」「黒」のような基本的な日本語色名（伝統色ではない）も色として認識する。"""
+    assert vocabulary.categorize_term("黄色") == "color"
+    assert vocabulary.categorize_term("黒") == "color"
+
+
+def test_color_conflict_with_generic_japanese_color_words():
+    conflicts = vocabulary.detect_tag_conflicts(free_text="黄色, 黒")
+    color_conflicts = [c for c in conflicts if c.category == "color"]
+    assert len(color_conflicts) == 1
+    assert set(color_conflicts[0].values) == {"yellow", "black"}
+
+
+def test_compound_japanese_sentence_still_not_falsely_flagged():
+    """「黄色のワンピースと黒のロングスカート」のような1つの文は、
+    タグ分割されていないため衝突として検出されない（既存の複合フレーズ仕様通り）。"""
+    conflicts = vocabulary.detect_tag_conflicts(free_text="黄色のワンピースと黒のロングスカート")
+    assert conflicts == []
+
+
+def test_dress_and_skirt_detected_as_subject_conflict_when_using_dictionary_terms():
+    """辞書に完全一致する語（"スカート"）を使えば、ワンピースとの対象語衝突は検出される。
+    一方、辞書に無い変化形（"ロングスカート"）は検出対象外という既知の制約も確認する。"""
+    conflicts_matched = vocabulary.detect_tag_conflicts(free_text="ワンピース, スカート")
+    assert any(c.category == "subject" and set(c.values) == {"dress", "skirt"} for c in conflicts_matched)
+
+    conflicts_unmatched = vocabulary.detect_tag_conflicts(free_text="ワンピース, ロングスカート")
+    assert not any(c.category == "subject" for c in conflicts_unmatched)
+
+
 # ── Prompt Composer / Auto の confirm_continue ゲート ────────────────────
 
 from nodes import NODE_CLASS_MAPPINGS  # noqa: E402

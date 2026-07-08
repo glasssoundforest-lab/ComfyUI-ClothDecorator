@@ -436,6 +436,8 @@ def _find_color_matches(tags_or_text: str | list[str]) -> set[str]:
     """
     カンマ区切りタグ（またはテキスト。内部でカンマ分割される）の中から、
     「タグ全体が丸ごと語彙上の色名と一致する」ものだけを検出する。
+    英語色名（BASE_COLORS）・日本の伝統色（TRADITIONAL_COLORS_JA）に加え、
+    "黄色"/"黒" のような一般的な日本語の色名（BASE_COLOR_EN_TO_JA の値）も対象。
 
     "red" のような単独タグは検出するが、"red and blue striped skirt" のように
     色の単語が長い説明文の一部として含まれているだけの場合は検出しない
@@ -443,10 +445,14 @@ def _find_color_matches(tags_or_text: str | list[str]) -> set[str]:
     """
     tags = tags_or_text if isinstance(tags_or_text, list) else _split_into_tags(tags_or_text)
     found: set[str] = set()
+    base_color_ja_to_en = {ja: en for en, ja in BASE_COLOR_EN_TO_JA.items() if en not in ("custom", "pastel")}
     for tag in tags:
-        tag_norm = _normalize_whitespace(tag).lower()
+        tag_stripped = _normalize_whitespace(tag)
+        tag_norm = tag_stripped.lower()
         if not tag_norm:
             continue
+        if tag_stripped in base_color_ja_to_en:
+            found.add(base_color_ja_to_en[tag_stripped])
         for name in BASE_COLORS:
             if name in ("custom", "pastel"):
                 continue
