@@ -86,3 +86,49 @@ def test_random_new_entries_resolve_correctly_end_to_end():
     assert result.resolved["material"] == "pina_fiber"
     assert "蒲公英色" in result.decoration_prompt
     assert result.inpaint_prompt.startswith("ハンボク")
+
+
+# ── 重複チェック（キー以外の値の重複も含む） ────────────────────────────
+
+def test_no_duplicate_color_hex_codes():
+    """異なる伝統色が同一hexを共有すると、Direct Paintモードで見分けがつかなくなるため禁止。"""
+    hexes = [e["hex"] for e in vocabulary.TRADITIONAL_COLORS_JA.values()]
+    assert len(hexes) == len(set(hexes))
+
+
+def test_no_duplicate_color_en_descriptions():
+    en_list = [e["en"] for e in vocabulary.TRADITIONAL_COLORS_JA.values()]
+    assert len(en_list) == len(set(en_list))
+
+
+def test_no_duplicate_ja_labels_within_decoration_preset():
+    labels = [ja for k, ja in vocabulary.DECORATION_LABELS_JA.items() if k not in ("none", "custom")]
+    assert len(labels) == len(set(labels))
+
+
+def test_no_duplicate_ja_labels_within_pattern():
+    labels = [ja for k, ja in vocabulary.PATTERN_LABELS_JA.items() if k not in ("none", "custom")]
+    assert len(labels) == len(set(labels))
+
+
+def test_no_duplicate_ja_labels_within_material():
+    labels = [ja for k, ja in vocabulary.MATERIAL_LABELS_JA.items() if k not in ("none", "custom")]
+    assert len(labels) == len(set(labels))
+
+
+def test_no_duplicate_en_phrases_within_pattern():
+    phrases = [p for k, p in vocabulary.PATTERN_VOCAB.items() if k not in ("none", "custom") and p]
+    assert len(phrases) == len(set(phrases))
+
+
+def test_no_duplicate_en_phrases_within_material():
+    phrases = [p for k, p in vocabulary.MATERIAL_VOCAB.items() if k not in ("none", "custom") and p]
+    assert len(phrases) == len(set(phrases))
+
+
+def test_no_duplicate_decoration_phrase_lists():
+    """decoration_presetは複数フレーズを持つため、フレーズ列全体が完全一致するキーが無いかを見る。"""
+    phrase_tuples = [
+        tuple(v) for k, v in vocabulary.DECORATION_PRESETS.items() if k not in ("none", "custom")
+    ]
+    assert len(phrase_tuples) == len(set(phrase_tuples))
